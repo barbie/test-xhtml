@@ -201,7 +201,7 @@ sub _process_checks {
 
             push @{ $self->{ERRORS} }, {
                 error => "missing label for input tag", 
-                message => 'all input tags require a unique label tag ($input)'
+                message => "all input tags require a unique label tag ($input)"
             };
         }
 
@@ -210,7 +210,7 @@ sub _process_checks {
 
             push @{ $self->{ERRORS} }, {
                 error => "missing input for label tag", 
-                message => 'all label tags should reference a unique input tag ($input)'
+                message => "all label tags should reference a unique input tag ($input)"
             };
         }
     } else {
