@@ -1,0 +1,55 @@
+--- #YAML:1.0
+name:                     Test-XHTML
+version:                  0.04
+abstract:                 Test your web page DTD validation.
+author:
+  - Barbie <barbie@cpan.org>
+
+license:                  perl
+distribution_type:        script
+installdirs:              site
+
+requires:
+  Class::Accessor::Fast:  0
+  Data::Dumper:           0
+  File::Basename:         0
+  File::Find::Rule:       0
+  File::Path:             0
+  Getopt::Long:           0
+  HTML::TokeParser:       0
+  IO::File:               0
+  Test::Builder:          0
+  WWW::Mechanize:         0
+  XML::LibXML:            1.70
+recommends:
+  Test::More:             0.70
+  Test::Pod:              1.00
+  Test::Pod::Coverage:    0.08
+  Test::CPAN::Meta:       0.13
+  Test::CPAN::Meta::JSON: 0.10
+build_requires:
+  Test::More:             0.70
+  Test::Builder::Tester:  0
+
+provides:
+  Test::XHTML:
+    file:     lib/Test/XHTML.pm
+    version:  0.04
+  Test::XHTML::Valid:
+    file:     lib/Test/XHTML/Valid.pm
+    version:  0.04
+  Test::XHTML::WAI:
+    file:     lib/Test/XHTML/WAI.pm
+    version:  0.04
+no_index:
+  directory:
+    - t
+    - examples
+
+resources:
+  license:    http://dev.perl.org/licenses/
+
+meta-spec:
+   version:   1.4
+   url:       http://module-build.sourceforge.net/META-spec-v1.4.html
+generated_by: Hand 1.0

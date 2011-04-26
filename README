@@ -1,0 +1,97 @@
+XHTML-VALID(1)        User Contributed Perl Documentation       XHTML-VALID(1)
+
+
+
+NAME
+       xhtml-valid - test web page DTD validation.
+
+SYNOPSIS
+         xhtml-valid \\
+                [-i|ignore file] \\
+                [-u|url url] [--ulist file] \\
+                [-p|path path] [-f|file file] [-flist file] \\
+                [-h|help] [-v|version]
+
+DESCRIPTION
+       Using either URLs or flat files, this program attempts to validate web
+       pages according to their own DTD.
+
+USAGE
+       This program can be used in several ways to validate web pages. It will
+       take a root URL and crawl the website from the root and validate every
+       page it finds below it, it can test named URLs only. Given a root local
+       directory it will traverse the directory tree and validate every HTML
+       file it finds, it will test a single file or a list of files. In short
+       it tries to validate web pages.
+
+       URL Options
+
+
+       * -u|url url
+           Given a root URL will traverse the website, validating all pages
+           found that are below the root URL. Thus external links and those
+           outside of the root URL are ignored.
+
+       * --ulist file
+           The given file should contain a list of URLs (one per line), which
+           will then be validated. Note that only the links listed are vali-
+           dated, no crawling of the links within the page is performed.
+
+       File Options
+
+
+       * -p|path path
+           Given a root directory will traverse the directory tree and vali-
+           date every .html or .htm file it finds.
+
+       * -f|file file
+           Validates a single file.
+
+       * -flist file
+           The given file should contain a list of files (one per line), which
+           will then be validated.
+
+       Supporting Options
+
+
+       * -i|ignore file
+           The given file should contain patterns (one per line) used to
+           ignore URLs and files (e.g. user login) from validation.
+
+           By default mailto links and various document and binary file for-
+           mats are ignored, together with any none 'http' protocol.
+
+       Other Options
+
+
+       * -h|help
+           Provides a help screen.
+
+       * -v|version
+           Provides the current program version
+
+BUGS, PATCHES & FIXES
+       There are no known bugs at the time of this release. However, if you
+       spot a bug or are experiencing difficulties, that is not explained
+       within the POD documentation, please send bug reports and patches to
+       barbie@cpan.org.
+
+       Fixes are dependant upon their severity and my availablity. Should a
+       fix not be forthcoming, please feel free to (politely) remind me.
+
+SEE ALSO
+       XML::LibXML
+
+AUTHOR
+         Barbie, <barbie@cpan.org>
+         for Miss Barbell Productions <http://www.missbarbell.co.uk>.
+
+COPYRIGHT AND LICENSE
+         Copyright (C) 2008-2011 Barbie for Miss Barbell Productions.
+
+         This module is free software; you can redistribute it and/or
+         modify it under the same terms as Perl itself.
+
+
+
+perl v5.8.8                       2011-01-13                    XHTML-VALID(1)
