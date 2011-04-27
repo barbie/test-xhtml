@@ -1,5 +1,8 @@
 Revision history for Test-XHTML
 
+0.05	current
+        - added support for hidden, textarea and select form controls.
+
 0.04	26/04/2011
         - added WAI.pm to add basic level support for WAI compliance.
 

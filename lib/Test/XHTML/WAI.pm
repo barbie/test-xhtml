@@ -120,7 +120,7 @@ sub _process_checks {
 
         #print STDERR "#p=".Dumper($p);
         
-        while( my $tag = $p->get_tag('form', '/form', 'input', 'img', 'a', 'table', 'map', 'object', 'label') ) {
+        while( my $tag = $p->get_tag('form', '/form', 'input', 'textarea', 'select', 'img', 'a', 'table', 'map', 'object', 'label') ) {
             if($tag->[0] eq 'form') {
                 %form = ( id => ($tag->[1]{id} || $tag->[1]{name}) );
             } elsif($tag->[0] eq '/form') {
@@ -142,16 +142,64 @@ sub _process_checks {
                 if($tag->[1]{id}) {
                     if($input{ $tag->[1]{id} }) {
                         push @{ $self->{ERRORS} }, {
-                            error => "dupliate id in input tag", 
-                            message => "all input tags require a unique id ($tag->[1]{id})"
+                            error => "dupliate id in input/textarea/select tag", 
+                            message => "all input/textarea/select tags require a unique id ($tag->[1]{id})"
                         };
                     } else {
-                        $input{ $tag->[1]{id} } = $tag->[1]{type} eq 'text';
+                        $input{ $tag->[1]{id} } = $tag->[1]{type};
                     }
-                } else {
+                } elsif($tag->[1]{type} !~ /hidden|submit|reset/) {
                     push @{ $self->{ERRORS} }, {
                         error => "missing id in input tag", 
                         message => "all input tags require an id ($tag->[1]{name})"
+                    };
+                }
+
+            } elsif($tag->[0] eq 'textarea') {
+                if($tag->[1]{id} && $tag->[1]{name} && $tag->[1]{id} ne $tag->[1]{name}) {
+                    push @{ $self->{ERRORS} }, {
+                        error => "id/name do not match in textarea tag", 
+                        message => "id/name mis-match in textarea tag ($tag->[1]{id}/$tag->[1]{name})"
+                    };
+                }
+
+                if($tag->[1]{id}) {
+                    if($input{ $tag->[1]{id} }) {
+                        push @{ $self->{ERRORS} }, {
+                            error => "dupliate id in input/textarea/select tag", 
+                            message => "all input/textarea/select tags require a unique id ($tag->[1]{id})"
+                        };
+                    } else {
+                        $input{ $tag->[1]{id} } = 'textarea';
+                    }
+                } else {
+                    push @{ $self->{ERRORS} }, {
+                        error => "missing id in textarea tag", 
+                        message => "all textarea tags require an id ($tag->[1]{name})"
+                    };
+                }
+
+            } elsif($tag->[0] eq 'select') {
+                if($tag->[1]{id} && $tag->[1]{name} && $tag->[1]{id} ne $tag->[1]{name}) {
+                    push @{ $self->{ERRORS} }, {
+                        error => "id/name do not match in select tag", 
+                        message => "id/name mis-match in select tag ($tag->[1]{id}/$tag->[1]{name})"
+                    };
+                }
+
+                if($tag->[1]{id}) {
+                    if($input{ $tag->[1]{id} }) {
+                        push @{ $self->{ERRORS} }, {
+                            error => "dupliate id in input/textarea/select tag", 
+                            message => "all input/textarea/select tags require a unique id ($tag->[1]{id})"
+                        };
+                    } else {
+                        $input{ $tag->[1]{id} } = 'select';
+                    }
+                } else {
+                    push @{ $self->{ERRORS} }, {
+                        error => "missing id in select tag", 
+                        message => "all select tags require an id ($tag->[1]{name})"
                     };
                 }
 
@@ -197,6 +245,7 @@ sub _process_checks {
         }
 
         for my $input (keys %input) {
+            next    if($input{$input} =~ /hidden|submit|reset/);
             next    if($label{$input});
 
             push @{ $self->{ERRORS} }, {
