@@ -28,6 +28,9 @@ Test::XHTML::Valid - test web page DTD validation.
     $txv->process_file($opt{file});         # test single file
     $txv->process_file_list($opt{flist});   # test list of files
 
+    # XML strings
+    $txv->process_xml($xml);                # test XML as a string
+
     $txv->process_retries();                    # retest any network failures
     my $results = $txv->process_results();
 
@@ -57,8 +60,10 @@ use File::Basename;
 use File::Find::Rule;
 use File::Path;
 use IO::File;
-use XML::LibXML '1.70';
 use WWW::Mechanize;
+use XML::Catalogs::HTML -libxml;    # load DTDs and ENTs locally
+use XML::LibXML '1.70';
+
 
 # -------------------------------------
 # Variables
@@ -114,6 +119,8 @@ sub process_url_list    { _process_ulist(@_);   }
 sub process_path        { _process_path(@_);    }
 sub process_file        { _process_file(@_);    }
 sub process_file_list   { _process_flist(@_);   }
+
+sub process_xml         { _process_xml(@_);     }
 
 sub process_retries     { _process_retries(@_); }
 sub process_results     { _process_results(@_); }
@@ -203,6 +210,12 @@ sub _process_path {
     my $path = shift;
     my @files = File::Find::Rule->file()->name(qr/\.html?/)->in($path);
     $self->_process_page(type => 'file', page => $_) for(@files);
+}
+
+sub _process_xml {
+    my $self = shift;
+    my $text = shift;
+    $self->_process_page(type => 'xml', content => $text);
 }
 
 sub _process_results {
@@ -302,6 +315,12 @@ sub _process_page {
 				$parser->parse_string( $page{content} );
 			};
         }
+    } elsif($page{type} eq 'xml') {
+        $self->_log( "Parsing XML string: " );
+        $self->{CONTENT} = $page{content};
+		eval {
+			$parser->parse_string( $page{content} );
+		};
     } else {
         $self->{CONTENT} = undef;
         die "Unknown format type: $page{type}\n";
@@ -314,6 +333,7 @@ sub _process_page {
        $@ =~ /validity error : No declaration for attribute xmlns of element (html|body|div)/) {
         $self->_log( "RETRY\n" );
         push @{ $self->{RETRIES} }, {type => $page{type}, page => $page{page}};
+        $self->{RETRIES}->[-1]{content} = $page{content}    if($page{type} eq 'xml');
     } elsif($@) {
         push @{ $self->{ERRORS} }, {page => $page{page}, error => $@, content => $page{content}, message => _parse_message($@)};
         $self->_log( "FAIL\n$@\n" );
@@ -343,8 +363,14 @@ sub _process_retries {
                 $self->{RESULTS}{NET}++;
                 next;
             }
+            $page->{content} = $mech->{content};
             eval {
-                $parser->parse_string($mech->{content});
+                $parser->parse_string($page->{content});
+            };
+        } elsif($page->{type} eq 'xml') {
+            $self->_log( "Parsing XML string: " );
+            eval {
+                $parser->parse_string( $page->{content} );
             };
         } else {
             die "Unknown format type: $page->{type}\n";
@@ -358,7 +384,7 @@ sub _process_retries {
             $self->_log( "NET FAILURE\n" );
             $self->{RESULTS}{NET}++;
         } elsif($@) {
-            push @{ $self->{ERRORS} }, {page => $page, error => $@, message => _parse_message($@)};
+            push @{ $self->{ERRORS} }, {page => $page->{page}, error => $@, content => $page->{content}, message => _parse_message($@)};
             $self->_log( "FAIL\n$@\n" );
             $self->{RESULTS}{FAIL}++;
         } else {
@@ -460,6 +486,10 @@ Test a single file.
 =item process_file_list(FILE)
 
 Test list of files contained in FILE (one per line).
+
+=item process_xml(XML)
+
+Test a single XML string, which is assumed to be a complete XHTML file.
 
 =item process_retries()
 

@@ -13,6 +13,7 @@ lib/Test/XHTML/WAI.pm
 t/01use.t
 t/10filetests.t
 t/11filetests.t
+t/20xmlstrings.t
 t/90podtest.t
 t/91podcover.t
 t/94metatest.t

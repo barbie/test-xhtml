@@ -4,5 +4,5 @@
 # Errors:
 # 1. id/name mis-match in input tag (test2/test2x)
 # 2. id/name mis-match in input tag (test3/test4)
-# 3. all input tags require a unique id (test3)
+# 3. all input/textarea/select tags require a unique id (test3)
 # 4. no submit tag in form (form1)

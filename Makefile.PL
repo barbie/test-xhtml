@@ -14,6 +14,7 @@ WriteMakefile(
         'Test::More'            => '0.70',
         'WWW::Mechanize'        => 0,
         'XML::LibXML'           => '1.70',
+        'XML::Catalogs::HTML'   => 0,
 
         'Getopt::Long'          => 0        # xhtml-valid script only
                         },
