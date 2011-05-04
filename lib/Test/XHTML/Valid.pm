@@ -276,21 +276,24 @@ sub _process_page {
     my %page = @_;
     $self->{RESULTS}{PAGES}++;
 
+    unless($page{type} && $page{type} =~ /^(file|url|xml)$/) {
+        $self->{CONTENT} = undef;
+        die "Unknown format type: $page{type}\n";
+    }
+
     sleep(1);
-    if($page{type} eq 'file') {
-        if($page{content}) {
-            $self->{CONTENT} = $page{content};
-        } else {
+    if($page{type} =~ /^(file|url)$/)   { $self->_log( "Parsing $page{page}: " ); }
+    elsif($page{type} eq 'xml')         { $self->_log( "Parsing XML string: " );  }
+
+    if($page{content}) {
+        $self->{CONTENT} = $page{content};
+    } else {
+
+        if($page{type} eq 'file') {
             $self->_retrieve_file($page{page});
             $page{content} = $self->{CONTENT};
-        }
-        $self->_log( "Parsing $page{page}: " );
-        eval {
-            $parser->parse_string( $self->{CONTENT} );
-        };
-    } elsif($page{type} eq 'url') {
-        $self->_log( "Parsing $page{page}: " );
-        unless($page{content}) {
+
+        } elsif($page{type} eq 'url') {
             eval { $mech->get( $page{page} ) };
             if($@) {
                 push @{ $self->{ERRORS} }, {page => $page{page}, error => $@, message => _parse_message($@)};
@@ -302,29 +305,19 @@ sub _process_page {
             unless($mech->success()) {
                 $self->{CONTENT} = undef;
                 push @{ $self->{RETRIES} }, {type => 'url', page => $page{page}};
+                return;
             } else {
 				$page{content} = $mech->content;
                 $self->{CONTENT} = $page{content};
-				eval {
-					$parser->parse_string( $page{content} );
-				};
 			}
-        } else {
-            $self->{CONTENT} = $page{content};
-			eval {
-				$parser->parse_string( $page{content} );
-			};
+        } elsif($page{type} eq 'xml') {
+            die "no content provided\n";
         }
-    } elsif($page{type} eq 'xml') {
-        $self->_log( "Parsing XML string: " );
-        $self->{CONTENT} = $page{content};
-		eval {
-			$parser->parse_string( $page{content} );
-		};
-    } else {
-        $self->{CONTENT} = undef;
-        die "Unknown format type: $page{type}\n";
     }
+
+	eval {
+		$parser->parse_string( $page{content} );
+	};
 
     # XML::LibXML doesn't explain failures to access the external DTD, so
     # these lines are a reference to that fact.
@@ -346,6 +339,7 @@ sub _process_page {
 
 sub _process_retries {
     my $self = shift;
+    return  unless($self->{RETRIES});
 
     for my $page (sort @{ $self->{RETRIES} }) {
         sleep(1);

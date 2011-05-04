@@ -55,7 +55,7 @@ init_options();
 ##### MAIN #####
 
 my $txv = Test::XHTML::Valid->new();
-$txv->ignore(@IGNORE);
+$txv->ignore_list(@IGNORE);
 
 # dynamic pages
 if($options{url}) {
@@ -70,7 +70,7 @@ if($options{url}) {
     $txv->process_file_list($options{flist});
 
 } elsif($options{file}) {
-    $txv->process_file($options{flist});
+    $txv->process_file($options{file});
 
 } elsif($options{path}) {
     $txv->process_path($options{path});
@@ -84,7 +84,12 @@ if($options{url}) {
 $txv->process_retries();
 my $results = $txv->process_results();
 
-printf "%5s: %s\n", $_, $results->{$_}  for(qw(FILES PASS FAIL NET));
+if($results->{FAIL}) {
+    print $txv->errstr() . "\n";
+    #my @errors = $txv->errors();
+}
+
+printf "%5s: %s\n", $_, ($results->{$_}||0)  for(qw(PAGES PASS FAIL NET));
 
 # -------------------------------------
 # Subroutines
