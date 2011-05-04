@@ -1,9 +1,12 @@
 Revision history for Test-XHTML
 
-0.05	current
+0.05	04/05/2011
         - added support for hidden, textarea and select form controls.
         - added support for validating XML strings (suggested by Colin Newell).
         - added support for XML catalogs (suggested by Nick Morrott).
+        - fixed calls within xhtml-valid script.
+        - added error output to xhtml-valid script.
+        - refactored and simplified logic when parsing a page.
 
 0.04	26/04/2011
         - added WAI.pm to add basic level support for WAI compliance.
