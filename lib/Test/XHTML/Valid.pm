@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use vars qw($VERSION);
-$VERSION = '0.05';
+$VERSION = '0.06';
 
 #----------------------------------------------------------------------------
 
@@ -64,7 +64,6 @@ use WWW::Mechanize;
 use XML::Catalogs::HTML -libxml;    # load DTDs and ENTs locally
 use XML::LibXML '1.70';
 
-
 # -------------------------------------
 # Variables
 
@@ -81,7 +80,6 @@ my @RESULTS = qw( PAGES PASS FAIL NET );
 # -------------------------------------
 # Singletons
 
-my $mech = WWW::Mechanize->new();
 my $parser = XML::LibXML->new;
 $parser->validation(1);
 
@@ -93,9 +91,13 @@ sub new {
     my $class = ref($proto) || $proto;
 
     # private data
+    my %hash  = @_;
     my $self  = {};
     $self->{RESULTS}{$_} = 0    for(@RESULTS);
     push @{ $self->{IGNORE} }, @IGNORE;
+
+    # store access to a Mechanize object
+    $self->{mech} = $hash{mech} || WWW::Mechanize->new();
 
     bless ($self, $class);
     return $self;
@@ -138,9 +140,9 @@ sub _retrieve_url {
     my $self = shift;
     my $url  = shift || return;
     $self->{ROOT} = $url;
-    $mech->get( $url );
-    if($mech->success()) {
-        $self->{CONTENT} = $mech->content;
+    $self->{mech}->get( $url );
+    if($self->{mech}->success()) {
+        $self->{CONTENT} = $self->{mech}->content;
     } else {
         $self->{CONTENT} = undef;
     }
@@ -253,21 +255,21 @@ sub _process_pages {
     while(@links) {
         my $page = shift @links;
         next    if($seen{$page});
-        $mech->get( $page );
-        unless($mech->success()) {
+        $self->{mech}->get( $page );
+        unless($self->{mech}->success()) {
             push @{ $self->{RETRIES} }, {type => 'url', page => $page};
             next;
         }
 
         $seen{$page} = 1;
-        my @hrefs = map {$_->url_abs()} $mech->links();
+        my @hrefs = map {$_->url_abs()} $self->{mech}->links();
         for my $href (reverse sort @hrefs) {
             next    if($seen{$href});
             next    if($self->_ignore($href));
             unshift @links, $href;
         }
 
-        $self->_process_page(type => 'url', page => $page, content => $mech->content);
+        $self->_process_page(type => 'url', page => $page, content => $self->{mech}->content);
     }
 }
 
@@ -294,7 +296,7 @@ sub _process_page {
             $page{content} = $self->{CONTENT};
 
         } elsif($page{type} eq 'url') {
-            eval { $mech->get( $page{page} ) };
+            eval { $self->{mech}->get( $page{page} ) };
             if($@) {
                 push @{ $self->{ERRORS} }, {page => $page{page}, error => $@, message => _parse_message($@)};
                 $self->_log( "FAIL\n$@\n" );
@@ -302,12 +304,12 @@ sub _process_page {
                 return;
             }
 
-            unless($mech->success()) {
+            unless($self->{mech}->success()) {
                 $self->{CONTENT} = undef;
                 push @{ $self->{RETRIES} }, {type => 'url', page => $page{page}};
                 return;
             } else {
-				$page{content} = $mech->content;
+				$page{content} = $self->{mech}->content;
                 $self->{CONTENT} = $page{content};
 			}
         } elsif($page{type} eq 'xml') {
@@ -351,13 +353,13 @@ sub _process_retries {
             };
         } elsif($page->{type} eq 'url') {
             $self->_log( "Parsing $page->{page}: " );
-            $mech->get( $page->{page} );
-            unless($mech->success()) {
+            $self->{mech}->get( $page->{page} );
+            unless($self->{mech}->success()) {
                 $self->_log( "NET FAILURE\n" );
                 $self->{RESULTS}{NET}++;
                 next;
             }
-            $page->{content} = $mech->{content};
+            $page->{content} = $self->{mech}->{content};
             eval {
                 $parser->parse_string($page->{content});
             };
@@ -391,8 +393,10 @@ sub _process_retries {
 sub _parse_message {
     my $e = shift;
 
+    return $e   unless($e && ref($e));
     while (defined $e->{_prev}) { $e = $e->{_prev} };
     return $e->{message};
+    #return "[$e->{line}:$e->{column}] $e->{message}";
 }
 
 sub _ignore {

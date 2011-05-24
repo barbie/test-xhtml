@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use vars qw($VERSION);
-$VERSION = '0.05';
+$VERSION = '0.06';
 
 #----------------------------------------------------------------------------
 
@@ -39,7 +39,7 @@ use WWW::Mechanize;
 # Singletons
 
 my $mech    = WWW::Mechanize->new();
-my $txv     = Test::XHTML::Valid->new();
+my $txv     = Test::XHTML::Valid->new(mech => $mech);
 my $txw     = Test::XHTML::WAI->new();
 my $Test    = Test::Builder->new();
 
@@ -71,7 +71,7 @@ sub runtests {
 
         my ($cmd,$text,$label) = split(',',$_,3);
         #$cmd =~ s/\s*$//;
-        #print STDERR "# $cmd,$text,$label\n";
+        #$Test->diag("cmd=[$cmd], text=[$text], label=[$label]");
 
         if($cmd eq 'config') {
             my ($key,$value) = split('=',$text,2);
@@ -94,8 +94,8 @@ sub runtests {
 
                 if($result->{PASS} != 1) {
                     $Test->diag($txv->errstr());
-                    $Test->diag(Dumper($txv->errors()))  if($config{'dump'});
-                    $Test->diag(Dumper($result))            if($config{'dump'});
+                    $Test->diag(Dumper($txv->errors())) if($config{'dump'});
+                    $Test->diag(Dumper($result))        if($config{'dump'});
                 }
             } else {
                 $txv->retrieve_file($link);
@@ -114,6 +114,7 @@ sub runtests {
                     $Test->diag($txw->errstr());
                     $Test->diag(Dumper($txw->errors()))     if($config{'dump'});
                     $Test->diag(Dumper($result))            if($config{'dump'});
+                    $Test->diag(Dumper($content))           if($config{'dump'} == 2);
                 }
             }
 
@@ -148,8 +149,8 @@ sub runtests {
 
                 if($result->{PASS} != 1) {
                     $Test->diag($txv->errstr());
-                    $Test->diag(Dumper($txv->errors()))  if($config{'dump'});
-                    $Test->diag(Dumper($result))            if($config{'dump'});
+                    $Test->diag(Dumper($txv->errors())) if($config{'dump'});
+                    $Test->diag(Dumper($result))        if($config{'dump'});
                 }
             } else {
                 $txv->retrieve_url($link);
@@ -168,6 +169,7 @@ sub runtests {
                     $Test->diag($txw->errstr());
                     $Test->diag(Dumper($txw->errors()))     if($config{'dump'});
                     $Test->diag(Dumper($result))            if($config{'dump'});
+                    $Test->diag(Dumper($content))           if($config{'dump'} == 2);
                 }
             }
 
@@ -201,12 +203,63 @@ sub runtests {
             $Test->unlike($content,qr!$text!s, $label);
             $Test->diag($content)  if($content =~ m!$text!s && $config{'dump'});
 
+        } elsif($cmd eq 'form' && $type eq 'url') {
+            my ($fname,$ftype) = split('=',$text,2);
+            $ftype = undef  unless($ftype =~ /^(num|name|id)$/);
+            my $ok = 0;
+            my $rs;
+
+            if($fname =~ /^\d+$/ && (!$ftype || $ftype eq 'num')) {
+                eval { $rs = $mech->form_number($fname) };
+                #$Test->diag("form_number: rs=$rs, [$@]");
+                if(!$@ && $rs) { $ok = 1; }
+            }
+            if(!$ok && (!$ftype || $ftype eq 'name')) {
+                eval { $rs = $mech->form_name($fname) };
+                #$Test->diag("form_name: rs=$rs, [$@]");
+                if(!$@ && $rs) { $ok = 1; }
+            }
+            if(!$ok && (!$ftype || $ftype eq 'id')) {
+                eval { $rs = $mech->form_id($fname) };
+                #$Test->diag("form_id: rs=$rs, [$@]");
+                if(!$@ && $rs) { $ok = 1; }
+            }
+
+            $Test->ok($ok,".. form '$fname' found");
+
         } elsif($cmd eq 'input' && $type eq 'url') {
             my ($key,$value) = split('=',$text,2);
-            if($key eq 'submit') {
+            if($text eq 'submit' || $key eq 'submit') {
                 $mech->submit();
                 if($mech->success()) {
                     $content = $mech->content();
+                    $link = $mech->base();
+
+                    if($config{xhtml}) {
+                        $txv->clear();
+                        $txv->process_xml($content);
+                        my $result = $txv->process_results();
+                        $Test->is_num($result->{PASS},1,"XHTML validity check for '$link'");
+
+                        if($result->{PASS} != 1) {
+                            $Test->diag($txv->errstr());
+                            $Test->diag(Dumper($txv->errors())) if($config{'dump'});
+                            $Test->diag(Dumper($result))        if($config{'dump'});
+                        }
+                    }
+
+                    if($config{wai}) {
+                        $txw->clear();
+                        $txw->validate($content);
+                        my $result = $txw->results();
+                        $Test->is_num($result->{PASS},1,"Content passes basic WAI compliance checks for '$link'");
+                        if($result->{PASS} != 1) {
+                            $Test->diag($txw->errstr());
+                            $Test->diag(Dumper($txw->errors()))     if($config{'dump'});
+                            $Test->diag(Dumper($result))            if($config{'dump'});
+                            $Test->diag(Dumper($content))           if($config{'dump'} == 2);
+                        }
+                    }
                 } else {
                     $content = '';
                 }
@@ -257,6 +310,8 @@ Where each field on the comma separated line represent 'cmd', 'text' and
   body          - test that 'text' exists in body content of the previous url.
   body not      - test that 'text' does not exist in body content of the 
                   previous url.
+  form          - name and type of form to use with subsequent input commands,
+                  when more than one form exists in the page.
   input         - form fill, use as 'fieldname=xxx', with 'submit' as the last
                   input to submit the form.
 
