@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use vars qw($VERSION);
-$VERSION = '0.05';
+$VERSION = '0.06';
 
 #----------------------------------------------------------------------------
 
@@ -131,13 +131,15 @@ sub _process_checks {
                     };
                 }
             } elsif($tag->[0] eq 'input') {
-                $form{submit} = 1   if($tag->[1]{type} eq 'submit');
-                if($tag->[1]{type} eq 'text' && $tag->[1]{id} && $tag->[1]{name} && $tag->[1]{id} ne $tag->[1]{name}) {
-                    push @{ $self->{ERRORS} }, {
-                        error => "id/name do not match in input tag", 
-                        message => "id/name mis-match in input tag ($tag->[1]{id}/$tag->[1]{name})"
-                    };
-                }
+                $form{submit} = 1   if($tag->[1]{type} && $tag->[1]{type} eq 'submit');
+
+                # not sure about this, need to verify
+                #if($tag->[1]{type} eq 'text' && $tag->[1]{id} && $tag->[1]{name} && $tag->[1]{id} ne $tag->[1]{name}) {
+                #    push @{ $self->{ERRORS} }, {
+                #        error => "id/name do not match in input tag", 
+                #        message => "id/name mis-match in input tag ($tag->[1]{id}/$tag->[1]{name})"
+                #    };
+                #}
 
                 if($tag->[1]{id}) {
                     if($input{ $tag->[1]{id} }) {
@@ -146,9 +148,11 @@ sub _process_checks {
                             message => "all input/textarea/select tags require a unique id ($tag->[1]{id})"
                         };
                     } else {
-                        $input{ $tag->[1]{id} } = $tag->[1]{type};
+                        $input{ $tag->[1]{id} }{type}   = $tag->[1]{type};
+                        $input{ $tag->[1]{id} }{row}    = $tag->[4];
+                        $input{ $tag->[1]{id} }{column} = $tag->[5];
                     }
-                } elsif($tag->[1]{type} !~ /hidden|submit|reset/) {
+                } elsif(!$tag->[1]{type} || $tag->[1]{type} !~ /^(hidden|submit|reset|button)$/) {
                     push @{ $self->{ERRORS} }, {
                         error => "missing id in input tag", 
                         message => "all input tags require an id ($tag->[1]{name})"
@@ -156,12 +160,13 @@ sub _process_checks {
                 }
 
             } elsif($tag->[0] eq 'textarea') {
-                if($tag->[1]{id} && $tag->[1]{name} && $tag->[1]{id} ne $tag->[1]{name}) {
-                    push @{ $self->{ERRORS} }, {
-                        error => "id/name do not match in textarea tag", 
-                        message => "id/name mis-match in textarea tag ($tag->[1]{id}/$tag->[1]{name})"
-                    };
-                }
+                # not sure about this, need to verify
+                #if($tag->[1]{id} && $tag->[1]{name} && $tag->[1]{id} ne $tag->[1]{name}) {
+                #    push @{ $self->{ERRORS} }, {
+                #        error => "id/name do not match in textarea tag", 
+                #        message => "id/name mis-match in textarea tag ($tag->[1]{id}/$tag->[1]{name}) [row $tag->[4], column $tag->[5]]"
+                #    };
+                #}
 
                 if($tag->[1]{id}) {
                     if($input{ $tag->[1]{id} }) {
@@ -170,7 +175,9 @@ sub _process_checks {
                             message => "all input/textarea/select tags require a unique id ($tag->[1]{id})"
                         };
                     } else {
-                        $input{ $tag->[1]{id} } = 'textarea';
+                        $input{ $tag->[1]{id} }{type}   = 'textarea';
+                        $input{ $tag->[1]{id} }{row}    = $tag->[4];
+                        $input{ $tag->[1]{id} }{column} = $tag->[5];
                     }
                 } else {
                     push @{ $self->{ERRORS} }, {
@@ -180,12 +187,13 @@ sub _process_checks {
                 }
 
             } elsif($tag->[0] eq 'select') {
-                if($tag->[1]{id} && $tag->[1]{name} && $tag->[1]{id} ne $tag->[1]{name}) {
-                    push @{ $self->{ERRORS} }, {
-                        error => "id/name do not match in select tag", 
-                        message => "id/name mis-match in select tag ($tag->[1]{id}/$tag->[1]{name})"
-                    };
-                }
+                # not sure about this, need to verify
+                #if($tag->[1]{id} && $tag->[1]{name} && $tag->[1]{id} ne $tag->[1]{name}) {
+                #    push @{ $self->{ERRORS} }, {
+                #        error => "id/name do not match in select tag", 
+                #        message => "id/name mis-match in select tag ($tag->[1]{id}/$tag->[1]{name}) [row $tag->[4], column $tag->[5]]"
+                #    };
+                #}
 
                 if($tag->[1]{id}) {
                     if($input{ $tag->[1]{id} }) {
@@ -194,7 +202,9 @@ sub _process_checks {
                             message => "all input/textarea/select tags require a unique id ($tag->[1]{id})"
                         };
                     } else {
-                        $input{ $tag->[1]{id} } = 'select';
+                        $input{ $tag->[1]{id} }{type}   = 'select';
+                        $input{ $tag->[1]{id} }{row}    = $tag->[4];
+                        $input{ $tag->[1]{id} }{column} = $tag->[5];
                     }
                 } else {
                     push @{ $self->{ERRORS} }, {
@@ -211,7 +221,9 @@ sub _process_checks {
                             message => "all label tags should reference a unique id ($tag->[1]{for})"
                         };
                     } else {
-                        $label{ $tag->[1]{for} } = 1;
+                        $label{ $tag->[1]{for} }{type}   = 'label';
+                        $label{ $tag->[1]{for} }{row}    = $tag->[4];
+                        $label{ $tag->[1]{for} }{column} = $tag->[5];
                     }
                 } else {
                     push @{ $self->{ERRORS} }, {
@@ -234,18 +246,26 @@ sub _process_checks {
                         message => "no title attribute in a tag ($tag->[1]{href})"
                     };
                 }
-            } elsif($tag->[0] =~ /table|map|object/) {
+
+            } elsif($tag->[0] =~ /^(map|object)$/) {
                 if(!defined $tag->[1]{title}) {
                     push @{ $self->{ERRORS} }, {
                         error => "missing title from $tag->[0]", 
                         message => "no title attribute in $tag->[0] tag"
                     };
                 }
+            } elsif($tag->[0] eq 'table') {
+                if(!defined $tag->[1]{title} && !defined $tag->[1]{summary}) {
+                    push @{ $self->{ERRORS} }, {
+                        error => "missing title/summary from $tag->[0]", 
+                        message => "no title or summary attribute in $tag->[0] tag"
+                    };
+                }
             }
         }
 
         for my $input (keys %input) {
-            next    if($input{$input} =~ /hidden|submit|reset/);
+            next    if($input{$input}{type} && $input{$input}{type} =~ /hidden|submit|reset|button/);
             next    if($label{$input});
 
             push @{ $self->{ERRORS} }, {
