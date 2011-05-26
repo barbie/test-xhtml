@@ -76,6 +76,7 @@ sub runtests {
         if($cmd eq 'config') {
             my ($key,$value) = split('=',$text,2);
             $config{lc $key} = $value;
+            $txw->level($value) if($key =~ /wai/i);
         } elsif($cmd eq 'all body') {
             push @all, {type => 'like', text => $text, label => $label};
         } elsif($cmd eq 'all body not') {

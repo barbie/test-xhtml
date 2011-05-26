@@ -46,6 +46,11 @@ use HTML::TokeParser;
 
 my @RESULTS = qw( PASS FAIL );
 
+# until Gisle updates HTML::TokeParser with the patch [1], and I can require
+# a minimum version of it, this will have to suffice.
+# [1] https://gitorious.org/perl-html-parser/mainline/merge_requests/2
+my $FIXED = $HTML::TokeParser::VERSION > 3.57 ? 1 : 0;
+
 # -------------------------------------
 # Public Methods
 
@@ -54,7 +59,7 @@ sub new {
     my $class = ref($proto) || $proto;
 
     # private data
-    my $self  = {};
+    my $self  = {level => 1};
     $self->{RESULTS}{$_} = 0    for(@RESULTS);
 
     bless ($self, $class);
@@ -73,6 +78,12 @@ sub results     { _process_results(@_); }
 sub clear       { my $self = shift; $self->{ERRORS} = undef; $self->_reset_results(); }
 sub errors      { my $self = shift; return $self->{ERRORS}; }
 sub errstr      { my $self = shift; return $self->_print_errors(); }
+
+sub level       { 
+    my ($self,$level) = @_;
+    $self->{level} = $level if(defined $level && $level =~ /^[123]$/);
+    return $self->{level}; 
+}
 
 # -------------------------------------
 # Private Methods
@@ -112,22 +123,35 @@ sub _process_checks {
     my $html = shift;
     my (%form,%input,%label);
 
+    #push @{ $self->{ERRORS} }, {
+    #    error => "debug", 
+    #    message => "VERSION=$HTML::TokeParser::VERSION, FIXED=$FIXED"
+    #};
+
     #use Data::Dumper;
     #print STDERR "#html=".Dumper($html);
 
     if($html) {
-        my $p = HTML::TokeParser->new(\$html);
+        my $p = $FIXED 
+                    ? HTML::TokeParser->new( \$html,
+                            start => "'S',tagname,attr,attrseq,text,line,column",
+                            end   => "'E',tagname,text,line,column"
+                      )
+                    : HTML::TokeParser->new( \$html );
 
         #print STDERR "#p=".Dumper($p);
         
-        while( my $tag = $p->get_tag('form', '/form', 'input', 'textarea', 'select', 'img', 'a', 'table', 'map', 'object', 'label') ) {
+        while( my $tag = $p->get_tag(   'form', '/form', 'input', 'textarea', 'select', 'label', 
+                                        'img', 'a', 
+                                        'table', 'th', 'td',
+                                        'map', 'object') ) {
             if($tag->[0] eq 'form') {
                 %form = ( id => ($tag->[1]{id} || $tag->[1]{name}) );
             } elsif($tag->[0] eq '/form') {
                 if(!$form{submit}) {
                     push @{ $self->{ERRORS} }, {
                         error => "missing submit in form", 
-                        message => 'no submit tag in form (' . ( $form{id} || '' ) . ')'
+                        message => 'no submit tag in form (' . ( $form{id} || '' ) . ')' . ($FIXED ? " [row $tag->[2], column $tag->[3]]" : '')
                     };
                 }
             } elsif($tag->[0] eq 'input') {
@@ -145,7 +169,7 @@ sub _process_checks {
                     if($input{ $tag->[1]{id} }) {
                         push @{ $self->{ERRORS} }, {
                             error => "dupliate id in input/textarea/select tag", 
-                            message => "all input/textarea/select tags require a unique id ($tag->[1]{id})"
+                            message => "all input/textarea/select tags require a unique id ($tag->[1]{id})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
                         };
                     } else {
                         $input{ $tag->[1]{id} }{type}   = $tag->[1]{type};
@@ -155,7 +179,7 @@ sub _process_checks {
                 } elsif(!$tag->[1]{type} || $tag->[1]{type} !~ /^(hidden|submit|reset|button)$/) {
                     push @{ $self->{ERRORS} }, {
                         error => "missing id in input tag", 
-                        message => "all input tags require an id ($tag->[1]{name})"
+                        message => "all input tags require an id ($tag->[1]{name})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
                     };
                 }
 
@@ -164,7 +188,7 @@ sub _process_checks {
                 #if($tag->[1]{id} && $tag->[1]{name} && $tag->[1]{id} ne $tag->[1]{name}) {
                 #    push @{ $self->{ERRORS} }, {
                 #        error => "id/name do not match in textarea tag", 
-                #        message => "id/name mis-match in textarea tag ($tag->[1]{id}/$tag->[1]{name}) [row $tag->[4], column $tag->[5]]"
+                #        message => "id/name mis-match in textarea tag ($tag->[1]{id}/$tag->[1]{name})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
                 #    };
                 #}
 
@@ -172,7 +196,7 @@ sub _process_checks {
                     if($input{ $tag->[1]{id} }) {
                         push @{ $self->{ERRORS} }, {
                             error => "dupliate id in input/textarea/select tag", 
-                            message => "all input/textarea/select tags require a unique id ($tag->[1]{id})"
+                            message => "all input/textarea/select tags require a unique id ($tag->[1]{id})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
                         };
                     } else {
                         $input{ $tag->[1]{id} }{type}   = 'textarea';
@@ -182,7 +206,7 @@ sub _process_checks {
                 } else {
                     push @{ $self->{ERRORS} }, {
                         error => "missing id in textarea tag", 
-                        message => "all textarea tags require an id ($tag->[1]{name})"
+                        message => "all textarea tags require an id ($tag->[1]{name})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
                     };
                 }
 
@@ -191,7 +215,7 @@ sub _process_checks {
                 #if($tag->[1]{id} && $tag->[1]{name} && $tag->[1]{id} ne $tag->[1]{name}) {
                 #    push @{ $self->{ERRORS} }, {
                 #        error => "id/name do not match in select tag", 
-                #        message => "id/name mis-match in select tag ($tag->[1]{id}/$tag->[1]{name}) [row $tag->[4], column $tag->[5]]"
+                #        message => "id/name mis-match in select tag ($tag->[1]{id}/$tag->[1]{name})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
                 #    };
                 #}
 
@@ -199,7 +223,7 @@ sub _process_checks {
                     if($input{ $tag->[1]{id} }) {
                         push @{ $self->{ERRORS} }, {
                             error => "dupliate id in input/textarea/select tag", 
-                            message => "all input/textarea/select tags require a unique id ($tag->[1]{id})"
+                            message => "all input/textarea/select tags require a unique id ($tag->[1]{id})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
                         };
                     } else {
                         $input{ $tag->[1]{id} }{type}   = 'select';
@@ -209,7 +233,7 @@ sub _process_checks {
                 } else {
                     push @{ $self->{ERRORS} }, {
                         error => "missing id in select tag", 
-                        message => "all select tags require an id ($tag->[1]{name})"
+                        message => "all select tags require an id ($tag->[1]{name})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
                     };
                 }
 
@@ -218,7 +242,7 @@ sub _process_checks {
                     if($label{ $tag->[1]{for} }) {
                         push @{ $self->{ERRORS} }, {
                             error => "dupliate for in label tag", 
-                            message => "all label tags should reference a unique id ($tag->[1]{for})"
+                            message => "all label tags should reference a unique id ($tag->[1]{for})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
                         };
                     } else {
                         $label{ $tag->[1]{for} }{type}   = 'label';
@@ -228,39 +252,25 @@ sub _process_checks {
                 } else {
                     push @{ $self->{ERRORS} }, {
                         error => "missing 'for' attribute in label tag", 
-                        message => "all label tags must reference an input id"
+                        message => "all label tags must reference an input id" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
                     };
                 }
 
             } elsif($tag->[0] eq 'img') {
-                if(!defined $tag->[1]{alt}) {
-                    push @{ $self->{ERRORS} }, {
-                        error => "missing alt from $tag->[0]", 
-                        message => "no alt attribute in img tag ($tag->[1]{src})"
-                    };
-                }
+                $self->_check_image($tag);
             } elsif($tag->[0] eq 'a') {
-                if(defined $tag->[1]{href} && !defined $tag->[1]{title}) {
-                    push @{ $self->{ERRORS} }, {
-                        error => "missing title from $tag->[0]", 
-                        message => "no title attribute in a tag ($tag->[1]{href})"
-                    };
-                }
+                $self->_check_link($tag);
 
             } elsif($tag->[0] =~ /^(map|object)$/) {
-                if(!defined $tag->[1]{title}) {
-                    push @{ $self->{ERRORS} }, {
-                        error => "missing title from $tag->[0]", 
-                        message => "no title attribute in $tag->[0] tag"
-                    };
-                }
+                $self->_check_title($tag);
+
             } elsif($tag->[0] eq 'table') {
-                if(!defined $tag->[1]{title} && !defined $tag->[1]{summary}) {
-                    push @{ $self->{ERRORS} }, {
-                        error => "missing title/summary from $tag->[0]", 
-                        message => "no title or summary attribute in $tag->[0] tag"
-                    };
-                }
+                $self->_check_title_summary($tag);
+                $self->_check_width($tag);
+                $self->_check_height($tag);
+            } elsif($tag->[0] =~ /^(th|td)$/) {
+                $self->_check_width($tag);
+                $self->_check_height($tag);
             }
         }
 
@@ -270,7 +280,7 @@ sub _process_checks {
 
             push @{ $self->{ERRORS} }, {
                 error => "missing label for input tag", 
-                message => "all input tags require a unique label tag ($input)"
+                message => "all input tags require a unique label tag ($input)" . ($FIXED ? " [row $input{$input}{row}, column $input{$input}{column}]" : '')
             };
         }
 
@@ -279,7 +289,7 @@ sub _process_checks {
 
             push @{ $self->{ERRORS} }, {
                 error => "missing input for label tag", 
-                message => "all label tags should reference a unique input tag ($input)"
+                message => "all label tags should reference a unique input tag ($input)" . ($FIXED ? " [row $label{$input}{row}, column $label{$input}{column}]" : '')
             };
         }
     } else {
@@ -297,6 +307,80 @@ sub _process_checks {
         $self->{RESULTS}{PASS}++;
     }
 }
+
+# -------------------------------------
+# Private Methods : Check Routines
+
+sub _check_image {
+    my ($self,$tag) = @_;
+    
+    return  if(defined $tag->[1]{alt});
+
+    push @{ $self->{ERRORS} }, {
+        error => "missing alt from $tag->[0]", 
+        message => "no alt attribute in img tag ($tag->[1]{src})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+    };
+}
+
+sub _check_link {
+    my ($self,$tag) = @_;
+    
+    return  unless(defined $tag->[1]{href} && !defined $tag->[1]{title});
+
+    push @{ $self->{ERRORS} }, {
+        error => "missing title from $tag->[0]", 
+        message => "no title attribute in a tag ($tag->[1]{href}, '$tag->[3]')" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+    };
+}
+
+sub _check_title {
+    my ($self,$tag) = @_;
+    
+    return  if(defined $tag->[1]{title});
+
+    push @{ $self->{ERRORS} }, {
+        error => "missing title from $tag->[0]", 
+        message => "no title attribute in $tag->[0] tag" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+    };
+}
+
+sub _check_title_summary {
+    my ($self,$tag) = @_;
+    
+    return  if(defined $tag->[1]{title} || defined $tag->[1]{summary});
+
+    push @{ $self->{ERRORS} }, {
+        error => "missing title/summary from $tag->[0]", 
+        message => "no title or summary attribute in $tag->[0] tag" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+    };
+}
+
+sub _check_width {
+    my ($self,$tag) = @_;
+    
+    return  unless($self->{level} > 1);
+    return  unless(defined $tag->[1]{width} && $tag->[1]{width} =~ /^\d+$/);
+
+    push @{ $self->{ERRORS} }, {
+        error => "absolute units used in width attribute for $tag->[0]", 
+        message => "use relative (or CSS), rather than absolute units for width attribute in $tag->[0] tag" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+    };
+}
+
+sub _check_height {
+    my ($self,$tag) = @_;
+    
+    return  unless($self->{level} > 1);
+    return  unless(defined $tag->[1]{height} && $tag->[1]{height} =~ /^\d+$/);
+
+    push @{ $self->{ERRORS} }, {
+        error => "absolute units used in height attribute for $tag->[0]", 
+        message => "use relative (or CSS), rather than absolute units for height attribute in $tag->[0] tag" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+    };
+}
+
+# -------------------------------------
+# Private Methods : Other
 
 sub _log {
     my $self = shift;
@@ -332,6 +416,11 @@ Creates and returns a Test::XHTML::WAI object.
 =head2 Public Methods
 
 =over 4
+
+=item level(LEVEL)
+
+Level of compliance required to be checked. Valid levels are: 1 (A Level), 2
+(AA Level) and 3 (AAA Level). Default level is 1. Invalid level are ignored.
 
 =item validate(CONTENT)
 
