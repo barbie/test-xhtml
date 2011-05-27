@@ -2,5 +2,5 @@
 #     expected: 1
 # 
 # Errors:
-# 1. all input/textarea/select tags require a unique id (test3)
-# 2. no submit tag in form (form1)
+# 1. all <input> tags require a unique id (test3)
+# 2. no submit button in form (form1)

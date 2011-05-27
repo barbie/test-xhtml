@@ -115,7 +115,7 @@ sub runtests {
                     $Test->diag($txw->errstr());
                     $Test->diag(Dumper($txw->errors()))     if($config{'dump'});
                     $Test->diag(Dumper($result))            if($config{'dump'});
-                    $Test->diag(Dumper($content))           if($config{'dump'} == 2);
+                    $Test->diag(Dumper($content))           if($config{'dump'} && $config{'dump'} == 2);
                 }
             }
 
@@ -170,7 +170,7 @@ sub runtests {
                     $Test->diag($txw->errstr());
                     $Test->diag(Dumper($txw->errors()))     if($config{'dump'});
                     $Test->diag(Dumper($result))            if($config{'dump'});
-                    $Test->diag(Dumper($content))           if($config{'dump'} == 2);
+                    $Test->diag(Dumper($content))           if($config{'dump'} && $config{'dump'} == 2);
                 }
             }
 
@@ -258,7 +258,7 @@ sub runtests {
                             $Test->diag($txw->errstr());
                             $Test->diag(Dumper($txw->errors()))     if($config{'dump'});
                             $Test->diag(Dumper($result))            if($config{'dump'});
-                            $Test->diag(Dumper($content))           if($config{'dump'} == 2);
+                            $Test->diag(Dumper($content))           if($config{'dump'} && $config{'dump'} == 2);
                         }
                     }
                 } else {

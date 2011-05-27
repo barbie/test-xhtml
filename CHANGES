@@ -1,6 +1,6 @@
 Revision history for Test-XHTML
 
-0.06	current
+0.06	27/05/2011
         - revised several WAI tests.
         - added ability to select a form for input/submit commands.
         - WWW::Mechanize object can now be passed to Test::XHTML::Valid.

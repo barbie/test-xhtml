@@ -6,6 +6,10 @@ use Test::More;
 use Test::XHTML;
 use IO::File;
 
+use HTML::TokeParser;
+my $FIXED = $HTML::TokeParser::VERSION > 3.57 ? 1 : 0;
+
+my $results = $FIXED ? './t/samples/result11b.log' : './t/samples/result11.log';
 my $logfile = './test11.log';
 unlink($logfile);
 
@@ -15,7 +19,7 @@ SKIP: {
     setlog( logfile => $logfile, logclean => 1 );
 
     my $tests = "t/samples/11-filetests.csv";
-    my $result = read_file('./t/samples/result11.log');
+    my $result = read_file($results);
 
     test_out(q{ok 1 - Got FILE './t/samples/test03.html'});
     test_out(q{not ok 2 - Content passes basic WAI compliance checks for './t/samples/test03.html'});

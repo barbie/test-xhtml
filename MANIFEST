@@ -22,6 +22,7 @@ t/96metatest.t
 t/samples/10-filetests.csv
 t/samples/11-filetests.csv
 t/samples/result11.log
+t/samples/result11b.log
 t/samples/test01.html
 t/samples/test02.html
 t/samples/test03.html

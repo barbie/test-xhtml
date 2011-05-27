@@ -1,0 +1,6 @@
+#          got: 0
+#     expected: 1
+# 
+# Errors:
+# 1. all <input> tags require a unique id (test3) [row 17, column 2]
+# 2. no submit button in form (form1) [row 25, column 2]
