@@ -1,5 +1,7 @@
 #,# Configuration,
 config,xhtml=1,
+config,dump=0,
+config,wai=1,
 
 #,# Rules for all pages,
 all body,<a href="/login.pl" title="Home: Keyboard Shortcut: CTRL\+SHIFT\+M">Home</a>,.. Home link found

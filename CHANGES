@@ -6,6 +6,13 @@ Revision history for Test-XHTML
         - WWW::Mechanize object can now be passed to Test::XHTML::Valid.
         - added ability to dump content (dump==2) if required.
         - validation now occurs on form submission.
+        - reworked some checks into small method blocks.
+        - added level() to set compliance level.
+        - added check for version of HTML::TokeParser, to allow for support of
+          extended error messages.
+        - added width/height AA level checks.
+        - added checks for case to all known HTML tags, based on DTD.
+        - added checks for formatting recommendations (eg i & b tags).
 
 0.05	04/05/2011
         - added support for hidden, textarea and select form controls.
