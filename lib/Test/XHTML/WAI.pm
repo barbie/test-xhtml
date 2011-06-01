@@ -223,7 +223,7 @@ sub _process_checks {
                     } else {
                         push @{ $self->{ERRORS} }, {
                             error => "submit outside of <form> tag", 
-                            message => 'submit button needs to be associated with a form' . ($FIXED ? " [row $tag->[2], column $tag->[3]]" : '')
+                            message => 'submit button needs to be associated with a form' . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
                         };
                     }
                 }
