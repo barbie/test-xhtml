@@ -1,6 +1,5 @@
 use Test::More;
 use IO::File;
-use Test::CPAN::Meta;
 use Test::XHTML;
 
 my $version = $Test::XHTML::VERSION;

@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use vars qw($VERSION);
-$VERSION = '0.06';
+$VERSION = '0.07';
 
 #----------------------------------------------------------------------------
 
@@ -401,7 +401,7 @@ sub _parse_message {
 
 sub _ignore {
     my $self = shift;
-    my $url  = shift;
+    my $url  = shift or return 1;   # ignore blank URLs
 
     for my $ignore (@{$self->{IGNORE}}) {
         return 1 if($url =~ $ignore);

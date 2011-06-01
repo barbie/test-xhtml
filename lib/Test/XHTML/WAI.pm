@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use vars qw($VERSION);
-$VERSION = '0.06';
+$VERSION = '0.07';
 
 #----------------------------------------------------------------------------
 
@@ -215,8 +215,18 @@ sub _process_checks {
                         message => 'no submit button in form (' . ( $form{id} || '' ) . ')' . ($FIXED ? " [row $tag->[2], column $tag->[3]]" : '')
                     };
                 }
+                %form = ();
             } elsif($tag->[0] eq 'input') {
-                $form{submit} = 1   if($tag->[1]{type} && $tag->[1]{type} eq 'submit');
+                if($tag->[1]{type} && $tag->[1]{type} eq 'submit') {
+                    if(%form) {
+                        $form{submit} = 1;
+                    } else {
+                        push @{ $self->{ERRORS} }, {
+                            error => "submit outside of <form> tag", 
+                            message => 'submit button needs to be associated with a form' . ($FIXED ? " [row $tag->[2], column $tag->[3]]" : '')
+                        };
+                    }
+                }
 
                 # not sure about this, need to verify
                 #if($tag->[1]{type} eq 'text' && $tag->[1]{id} && $tag->[1]{name} && $tag->[1]{id} ne $tag->[1]{name}) {

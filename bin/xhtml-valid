@@ -3,7 +3,7 @@ use strict;
 use warnings;
 $|++;
 
-my $VERSION = '0.04';
+my $VERSION = '0.07';
 
 #----------------------------------------------------------------------------
 
@@ -15,8 +15,8 @@ xhtml-valid - test web page DTD validation.
 
   xhtml-valid \\
          [-i|ignore file] \\
-         [-u|url url] [--ulist file] \\
-         [-p|path path] [-f|file file] [-flist file] \\
+         ( [-r|root url]  | [-u|url url]   | [--ulist file] | \\
+           [-p|path path] | [-f|file file] | [--flist file] | ) \\
          [-h|help] [-v|version]
 
 =head1 DESCRIPTION
@@ -58,8 +58,11 @@ my $txv = Test::XHTML::Valid->new();
 $txv->ignore_list(@IGNORE);
 
 # dynamic pages
-if($options{url}) {
-    $txv->process_pages($options{url});
+if($options{root}) {
+    $txv->process_root($options{url});
+
+} elsif($options{url}) {
+    $txv->process_link($options{url});
 
 } elsif($options{ulist}) {
     $txv->process_url_list($options{ulist});
@@ -99,23 +102,24 @@ sub init_options {
         'path|p=s',
         'file|f=s',
         'flist=s',
+        'root|r=s',
         'url|u=s',
         'ulist=s',
         'ignore|i=s',
         'help|h',
         'version|v'
-    );
+    ) or help(1);
 
-    _help(1)    if($options{help});
-    _help(0)    if($options{version});
+    help(1)    if($options{help});
+    help(0)    if($options{version});
     if(defined $options{path} && ! -d $options{path}) {
         print "ERROR: path not found - $options{path}\n";
-        _help(1);
+        help(1);
     }
     for my $file ('file','flist','ulist') {
         if(defined $options{$file} && ! -f $options{$file}) {
             print "ERROR: file used in option '$file' not found [$options{$file}]\n";
-            _help(1);
+            help(1);
         }
     }
 
@@ -128,7 +132,7 @@ sub init_options {
     }
 }
 
-sub _help {
+sub help {
     my $full = shift;
 
     if($full) {
@@ -136,13 +140,14 @@ sub _help {
 
 Usage: $0 [-h] [-v] \\
          [-i file]
-         [-u url] [--ulist file] \\
-         [-p path] [-f file] [-flist file]
+         ( [-r url]  | [-u url]  | [--ulist file] \\
+           [-p path] | [-f file] | [--flist file] )
 
 
   -i file       patterns used to ignore URLs (e.g. user login)
 
-  -u url        root target URL for validating
+  -r url        root target URL for validating (multiple pages)
+  -u url        target URL for validating (single page)
   -ulist file   file containing a list of target URLs
 
   -p path       target directory of XHTML files
@@ -152,13 +157,14 @@ Usage: $0 [-h] [-v] \\
   -h            this help screen
   -v            program version
 
-  Note: The --url|u option acts as a crawler, testing any URL links found in
-        the page that match a URL that would be below the given root URL. As
-        such external links to the site and links that would be a parent of
-        the given root are not tested.
+  Note: The --root|r option acts as a crawler. As such use with care. Testing
+        any such URL will also test any links found in the root page, and any
+        subsequent pages, that match a URL that would be below the given root
+        URL. External links and non-child links of the given root are not 
+        tested.
 
-        The --ulist option will only test the web links listed, and will NOT
-        crawl any links within the page.
+        The --ulist and --url options will only test the web links listed, and
+        will NOT crawl any links within the page.
 
 HERE
 

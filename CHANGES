@@ -1,5 +1,13 @@
 Revision history for Test-XHTML
 
+0.07	01/06/2011
+        - added checks for submit button outside of a form.
+        - fixed change files test file (thanks to Sergiy Borodych)
+        - fixed help call in the xhtml-valid script (thanks to Sergiy Borodych)
+        - added the --root option, and clarified the --url option of the
+          xhtml-valid script.
+        - ignore blank URLs (thanks to Sergiy Borodych)
+
 0.06	27/05/2011
         - revised several WAI tests.
         - added ability to select a form for input/submit commands.
