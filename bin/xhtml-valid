@@ -188,11 +188,15 @@ a single file or a list of files. In short it tries to validate web pages.
 
 =over
 
-=item * -u|url url
+=item * -r|root url
 
 Given a root URL will traverse the website, validating all pages found that
 are below the root URL. Thus external links and those outside of the root URL
 are ignored.
+
+=item * -u|url url
+
+Given a single URL will validating the current page only.
 
 =item * --ulist file
 

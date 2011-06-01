@@ -7,10 +7,10 @@ NAME
 
 SYNOPSIS
          xhtml-valid \\
-                [-i|ignore file] \\
-                [-u|url url] [--ulist file] \\
-                [-p|path path] [-f|file file] [-flist file] \\
-                [-h|help] [-v|version]
+                [-i│ignore file] \\
+                ( [-r│root url]  │ [-u│url url]   │ [--ulist file] │ \\
+                  [-p│path path] │ [-f│file file] │ [--flist file] │ ) \\
+                [-h│help] [-v│version]
 
 DESCRIPTION
        Using either URLs or flat files, this program attempts to validate web
@@ -27,10 +27,13 @@ USAGE
        URL Options
 
 
-       * -u|url url
+       * -r│root url
            Given a root URL will traverse the website, validating all pages
            found that are below the root URL. Thus external links and those
            outside of the root URL are ignored.
+
+       * -u│url url
+           Given a single URL will validating the current page only.
 
        * --ulist file
            The given file should contain a list of URLs (one per line), which
@@ -40,11 +43,11 @@ USAGE
        File Options
 
 
-       * -p|path path
+       * -p│path path
            Given a root directory will traverse the directory tree and vali-
            date every .html or .htm file it finds.
 
-       * -f|file file
+       * -f│file file
            Validates a single file.
 
        * -flist file
@@ -54,20 +57,20 @@ USAGE
        Supporting Options
 
 
-       * -i|ignore file
+       * -i│ignore file
            The given file should contain patterns (one per line) used to
            ignore URLs and files (e.g. user login) from validation.
 
            By default mailto links and various document and binary file for-
-           mats are ignored, together with any none 'http' protocol.
+           mats are ignored, together with any none ’http’ protocol.
 
        Other Options
 
 
-       * -h|help
+       * -h│help
            Provides a help screen.
 
-       * -v|version
+       * -v│version
            Provides the current program version
 
 BUGS, PATCHES & FIXES
@@ -90,8 +93,8 @@ COPYRIGHT AND LICENSE
          Copyright (C) 2008-2011 Barbie for Miss Barbell Productions.
 
          This module is free software; you can redistribute it and/or
-         modify it under the same terms as Perl itself.
+         modify it under the Artistic Licence v2.
 
 
 
-perl v5.8.8                       2011-01-13                    XHTML-VALID(1)
+perl v5.8.8                       2011-06-01                    XHTML-VALID(1)
