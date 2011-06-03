@@ -158,7 +158,7 @@ sub _process_checks {
     my $html = shift;
 
     # clear data from previous tests.
-    $self->{$_} = undef for(qw(input label form));
+    $self->{$_} = undef for(qw(input label form links));
 
     #push @{ $self->{ERRORS} }, {
     #    error => "debug",
@@ -373,7 +373,20 @@ sub _check_image {
 sub _check_link {
     my ($self,$tag) = @_;
 
-    return  unless(defined $tag->[1]{href} && !defined $tag->[1]{title});
+    return  unless(defined $tag->[1]{href});    # ignore named anchors
+
+    if($tag->[1]{title}) {
+        if($self->{links}{ $tag->[1]{href} } && $self->{links}{ $tag->[1]{href} } ne $tag->[1]{title}) {
+            push @{ $self->{ERRORS} }, {
+                ref     => 'WCAG v2 2.4.4 (A)', #E898
+                error   => "different titles used for the same link",
+                message => "repeated links should use the same titles ($tag->[1]{href}, '$self->{links}{ $tag->[1]{href} }' => '$tag->[1]{title}')" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+            };
+        } else {
+            $self->{links}{ $tag->[1]{href} } = $tag->[1]{title};
+        }
+        return;
+    }
 
     push @{ $self->{ERRORS} }, {
         ref     => 'WCAG v2 1.1.1 (A)', #E871
