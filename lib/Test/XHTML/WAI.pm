@@ -157,6 +157,9 @@ sub _process_checks {
     my $self = shift;
     my $html = shift;
 
+    # clear data from previous tests.
+    $self->{$_} = undef for(qw(input label form));
+
     #push @{ $self->{ERRORS} }, {
     #    error => "debug",
     #    message => "VERSION=$HTML::TokeParser::VERSION, FIXED=$FIXED"
@@ -297,11 +300,15 @@ sub _check_form_control {
                 message => "all <$tag->[0]> tags require a unique id ($tag->[1]{id})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
             };
         } else {
-            $self->{input}{ $tag->[1]{id} }{type}   = 'textarea';
+            $self->{input}{ $tag->[1]{id} }{type}   = $tag->[1]{type};
             $self->{input}{ $tag->[1]{id} }{title}  = $tag->[1]{title};
             $self->{input}{ $tag->[1]{id} }{row}    = $tag->[4];
             $self->{input}{ $tag->[1]{id} }{column} = $tag->[5];
         }
+
+    } elsif($tag->[1]{type} && $tag->[1]{type} =~ /hidden|submit|reset|button/) {
+        return;
+
     } elsif(!$tag->[1]{title}) {
         push @{ $self->{ERRORS} }, {
             ref     => 'WCAG v2 1.1.1 (A)', #E866
@@ -388,7 +395,7 @@ sub _check_format {
     push @{ $self->{ERRORS} }, {
         ref     => 'WCAG v2 1.3.1 (A)', #E892
         error   => "<$formats{$tag->[0]}> tag is preferred over <$tag->[0]> tag",
-        message => "Use CSS for presentation effects, or use <$formats{$tag->[0]}> for emphasis not <$tag->[0]> tag" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+        message => "use CSS for presentation effects, or use <$formats{$tag->[0]}> for emphasis not <$tag->[0]> tag" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
     };
 }
 
