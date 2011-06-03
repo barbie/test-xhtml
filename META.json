@@ -1,6 +1,6 @@
 {
     "name": "Test-XHTML",
-    "version": "0.07",
+    "version": "0.08",
     "abstract": "Test your web page DTD validation.",
     "author": ["Barbie <barbie@cpan.org>"],
 
@@ -54,15 +54,15 @@
     "provides": {
         "Test::XHTML": {
             "file": "lib/Test/XHTML.pm",
-            "version": "0.07"
+            "version": "0.08"
         },
         "Test::XHTML::Valid": {
             "file": "lib/Test/XHTML/Valid.pm",
-            "version": "0.07"
+            "version": "0.08"
         },
         "Test::XHTML::WAI": {
             "file": "lib/Test/XHTML/WAI.pm",
-            "version": "0.07"
+            "version": "0.08"
         }
     },
     "no_index": {

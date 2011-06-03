@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use vars qw($VERSION);
-$VERSION = '0.07';
+$VERSION = '0.08';
 
 #----------------------------------------------------------------------------
 
@@ -40,6 +40,7 @@ use base qw(Class::Accessor::Fast);
 use File::Basename;
 use File::Path;
 use HTML::TokeParser;
+use Data::Dumper;
 
 # -------------------------------------
 # Variables
@@ -58,6 +59,31 @@ my %declarations = (
     'html401-strict.dtd'        => 1,
     'html401-loose.dtd'         => 1,
     'html401-frameset.dtd'      => 1,
+);
+
+my @TAGS = (
+    # list taken from http://www.w3schools.com/tags/default.asp
+    'a', 'abbr', 'acronym', 'address', 'applet', 'area',
+    'b', 'base', 'basefont', 'bdo', 'big', 'blockquote', 'body', 'br', 'button',
+    'caption', 'center', 'cite', 'code', 'col', 'colgroup',
+    'dd', 'del', 'dfn', 'dir', 'div', 'dl', 'dt',
+    'em',
+    'fieldset', 'font', 'form', 'frame', 'framset',
+    'head', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'html',
+    'i', 'iframe', 'img', 'input', 'ins',
+    'kbd',
+    'label', 'legend', 'li', 'link',
+    'map', 'menu', 'meta',
+    'noframes', 'noscript',
+    'object', 'ol', 'optgroup', 'option',
+    'p', 'param', 'pre',
+    'q',
+    's', 'samp', 'script', 'select', 'small', 'span', 'strike', 'strong', 'style', 'sub',
+    'table', 'tbody', 'td', 'textarea', 'tfoot', 'th', 'thead', 'title', 'tr', 'tt',
+    'u', 'ul',
+    'var',
+
+    '/form'
 );
 
 # -------------------------------------
@@ -88,10 +114,10 @@ sub clear       { my $self = shift; $self->{ERRORS} = undef; $self->_reset_resul
 sub errors      { my $self = shift; return $self->{ERRORS}; }
 sub errstr      { my $self = shift; return $self->_print_errors(); }
 
-sub level       { 
+sub level       {
     my ($self,$level) = @_;
     $self->{level} = $level if(defined $level && $level =~ /^[123]$/);
-    return $self->{level}; 
+    return $self->{level};
 }
 
 # -------------------------------------
@@ -130,10 +156,9 @@ sub _print_errors {
 sub _process_checks {
     my $self = shift;
     my $html = shift;
-    my (%form,%input,%label);
 
     #push @{ $self->{ERRORS} }, {
-    #    error => "debug", 
+    #    error => "debug",
     #    message => "VERSION=$HTML::TokeParser::VERSION, FIXED=$FIXED"
     #};
 
@@ -141,7 +166,7 @@ sub _process_checks {
     #print STDERR "#html=".Dumper($html);
 
     if($html) {
-        my $p = $FIXED 
+        my $p = $FIXED
                     ? HTML::TokeParser->new( \$html,
                             start => "'S',tagname,attr,attrseq,text,line,column",
                             end   => "'E',tagname,text,line,column"
@@ -149,14 +174,14 @@ sub _process_checks {
                     : HTML::TokeParser->new( \$html );
 
         #print STDERR "#p=".Dumper($p);
-        
+
         # determine declaration and the case requirements
         my $token = $p->get_token();
         if($token && $token->[0] eq 'D') {
             my $declaration = $token->[1];
             $declaration =~ s/\s+/ /sg;
             for my $type (keys %declarations) {
-                if($declaration =~ /$type/) { 
+                if($declaration =~ /$type/) {
                     $self->{case} = $declarations{$type};
                     last;
                 }
@@ -165,168 +190,29 @@ sub _process_checks {
             $p->unget_token($token);
         }
 
-        while( my $tag = $p->get_tag(   
-                    # list taken from http://www.w3schools.com/tags/default.asp
-                    'a', 'abbr', 'acronym', 'address', 'applet', 'area', 
-                    'b', 'base', 'basefont', 'bdo', 'big', 'blockquote', 'body', 'br', 'button', 
-                    'caption', 'center', 'cite', 'code', 'col', 'colgroup', 
-                    'dd', 'del', 'dfn', 'dir', 'div', 'dl', 'dt', 
-                    'em', 
-                    'fieldset', 'font', 'form', 'frame', 'framset', 
-                    'head', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'html', 
-                    'i', 'iframe', 'img', 'input', 'ins', 
-                    'kbd', 
-                    'label', 'legend', 'li', 'link', 
-                    'map', 'menu', 'meta', 
-                    'noframes', 'noscript', 
-                    'object', 'ol', 'optgroup', 'option', 
-                    'p', 'param', 'pre', 
-                    'q', 
-                    's', 'samp', 'script', 'select', 'small', 'span', 'strike', 'strong', 'style', 'sub', 
-                    'table', 'tbody', 'td', 'textarea', 'tfoot', 'th', 'thead', 'title', 'tr', 'tt',
-                    'u', 'ul', 
-                    'var',
-                                    
-                    '/form'
-
-                ) ) {
+        while( my $tag = $p->get_tag( @TAGS ) ) {
 
             if($tag->[0] eq uc $tag->[0]) {
-                if($self->{case} == 1) {
-                    push @{ $self->{ERRORS} }, {
-                        error => "tag <$tag->[0]> should be lowercase", 
-                        message => "W3C recommends use of lowercase in HTML 4 (<$tag->[0]>)" . ($FIXED ? " [row $tag->[2], column $tag->[3]]" : '')
-                    };
-                } elsif($self->{case} == 2) {
-                    push @{ $self->{ERRORS} }, {
-                        error => "tag <$tag->[0]> must be lowercase", 
-                        message => "declaration requires lowercase tags (<$tag->[0]>)" . ($FIXED ? " [row $tag->[2], column $tag->[3]]" : '')
-                    };
-                }
+                $self->_check_case($tag);
                 $tag->[0] = lc $tag->[0];
             }
 
             if($tag->[0] eq 'form') {
-                %form = ( id => ($tag->[1]{id} || $tag->[1]{name}) );
+                $self->{form} = { id => ($tag->[1]{id} || $tag->[1]{name}) };
             } elsif($tag->[0] eq '/form') {
-                if(!$form{submit}) {
-                    push @{ $self->{ERRORS} }, {
-                        error => "missing submit in <form>", 
-                        message => 'no submit button in form (' . ( $form{id} || '' ) . ')' . ($FIXED ? " [row $tag->[2], column $tag->[3]]" : '')
-                    };
-                }
-                %form = ();
+                $self->_check_form($tag);
+                $self->{form} = undef;
+
             } elsif($tag->[0] eq 'input') {
-                if($tag->[1]{type} && $tag->[1]{type} eq 'submit') {
-                    if(%form) {
-                        $form{submit} = 1;
-                    } else {
-                        push @{ $self->{ERRORS} }, {
-                            error => "submit outside of <form> tag", 
-                            message => 'submit button needs to be associated with a form' . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
-                        };
-                    }
-                }
-
-                # not sure about this, need to verify
-                #if($tag->[1]{type} eq 'text' && $tag->[1]{id} && $tag->[1]{name} && $tag->[1]{id} ne $tag->[1]{name}) {
-                #    push @{ $self->{ERRORS} }, {
-                #        error => "id/name do not match in <$tag->[0]> tag", 
-                #        message => "id/name mis-match in <$tag->[0]> tag ($tag->[1]{id}/$tag->[1]{name})"
-                #    };
-                #}
-
-                if($tag->[1]{id}) {
-                    if($input{ $tag->[1]{id} }) {
-                        push @{ $self->{ERRORS} }, {
-                            error => "dupliate id in <$tag->[0]> tag", 
-                            message => "all <$tag->[0]> tags require a unique id ($tag->[1]{id})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
-                        };
-                    } else {
-                        $input{ $tag->[1]{id} }{type}   = $tag->[1]{type};
-                        $input{ $tag->[1]{id} }{row}    = $tag->[4];
-                        $input{ $tag->[1]{id} }{column} = $tag->[5];
-                    }
-                } elsif(!$tag->[1]{type} || $tag->[1]{type} !~ /^(hidden|submit|reset|button)$/) {
-                    push @{ $self->{ERRORS} }, {
-                        error => "missing id in <$tag->[0]> tag", 
-                        message => "all <$tag->[0]> tags require an id ($tag->[1]{name})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
-                    };
-                }
-
-            } elsif($tag->[0] eq 'textarea') {
-                # not sure about this, need to verify
-                #if($tag->[1]{id} && $tag->[1]{name} && $tag->[1]{id} ne $tag->[1]{name}) {
-                #    push @{ $self->{ERRORS} }, {
-                #        error => "id/name do not match in textarea tag", 
-                #        message => "id/name mis-match in textarea tag ($tag->[1]{id}/$tag->[1]{name})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
-                #    };
-                #}
-
-                if($tag->[1]{id}) {
-                    if($input{ $tag->[1]{id} }) {
-                        push @{ $self->{ERRORS} }, {
-                            error => "dupliate id in <$tag->[0]> tag", 
-                            message => "all <$tag->[0]> tags require a unique id ($tag->[1]{id})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
-                        };
-                    } else {
-                        $input{ $tag->[1]{id} }{type}   = 'textarea';
-                        $input{ $tag->[1]{id} }{row}    = $tag->[4];
-                        $input{ $tag->[1]{id} }{column} = $tag->[5];
-                    }
-                } else {
-                    push @{ $self->{ERRORS} }, {
-                        error => "missing id in <textarea> tag", 
-                        message => "all <textarea> tags require an id ($tag->[1]{name})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
-                    };
-                }
-
-            } elsif($tag->[0] eq 'select') {
-                # not sure about this, need to verify
-                #if($tag->[1]{id} && $tag->[1]{name} && $tag->[1]{id} ne $tag->[1]{name}) {
-                #    push @{ $self->{ERRORS} }, {
-                #        error => "id/name do not match in <select> tag", 
-                #        message => "id/name mis-match in <select> tag ($tag->[1]{id}/$tag->[1]{name})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
-                #    };
-                #}
-
-                if($tag->[1]{id}) {
-                    if($input{ $tag->[1]{id} }) {
-                        push @{ $self->{ERRORS} }, {
-                            error => "dupliate id in <$tag->[0]> tag", 
-                            message => "all <$tag->[0]> tags require a unique id ($tag->[1]{id})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
-                        };
-                    } else {
-                        $input{ $tag->[1]{id} }{type}   = 'select';
-                        $input{ $tag->[1]{id} }{row}    = $tag->[4];
-                        $input{ $tag->[1]{id} }{column} = $tag->[5];
-                    }
-                } else {
-                    push @{ $self->{ERRORS} }, {
-                        error => "missing id in <$tag->[0]> tag", 
-                        message => "all <$tag->[0]> tags require an id ($tag->[1]{name})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
-                    };
-                }
-
+                $self->_check_form_submit($tag);
+                $self->_check_form_control($tag);
+            } elsif($tag->[0] =~ /^(select|textarea)$/) {
+                $self->_check_form_control($tag);
             } elsif($tag->[0] eq 'label') {
-                if($tag->[1]{for}) {
-                    if($label{ $tag->[1]{for} }) {
-                        push @{ $self->{ERRORS} }, {
-                            error => "dupliate for in <$tag->[0]> tag", 
-                            message => "all <$tag->[0]> tags should reference a unique id ($tag->[1]{for})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
-                        };
-                    } else {
-                        $label{ $tag->[1]{for} }{type}   = 'label';
-                        $label{ $tag->[1]{for} }{row}    = $tag->[4];
-                        $label{ $tag->[1]{for} }{column} = $tag->[5];
-                    }
-                } else {
-                    push @{ $self->{ERRORS} }, {
-                        error => "missing 'for' attribute in <$tag->[0]> tag", 
-                        message => "all <$tag->[0]> tags must reference an <input> tag id" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
-                    };
-                }
+                $self->_check_label($tag);
 
+            } elsif($tag->[0] eq 'object') {
+                $self->_check_object($tag,$p);
             } elsif($tag->[0] eq 'img') {
                 $self->_check_image($tag);
             } elsif($tag->[0] eq 'a') {
@@ -334,8 +220,9 @@ sub _process_checks {
             } elsif($tag->[0] =~ /^(i|b)$/) {
                 $self->_check_format($tag);
 
-            } elsif($tag->[0] =~ /^(map|object)$/) {
-                $self->_check_title($tag);
+            # need to confirm
+            #} elsif($tag->[0] eq 'map') {
+            #    $self->_check_title($tag);
 
             } elsif($tag->[0] eq 'table') {
                 $self->_check_title_summary($tag);
@@ -347,27 +234,12 @@ sub _process_checks {
             }
         }
 
-        for my $input (keys %input) {
-            next    if($input{$input}{type} && $input{$input}{type} =~ /hidden|submit|reset|button/);
-            next    if($label{$input});
+        $self->_check_labelling();
 
-            push @{ $self->{ERRORS} }, {
-                error => "missing label for <input> tag", 
-                message => "all <input> tags require a unique <label> tag ($input)" . ($FIXED ? " [row $input{$input}{row}, column $input{$input}{column}]" : '')
-            };
-        }
-
-        for my $input (keys %label) {
-            next    if($input{$input});
-
-            push @{ $self->{ERRORS} }, {
-                error => "missing input for <label> tag", 
-                message => "all <label> tags should reference a unique <input> tag ($input)" . ($FIXED ? " [row $label{$input}{row}, column $label{$input}{column}]" : '')
-            };
-        }
     } else {
         push @{ $self->{ERRORS} }, {
-            error => "missing content", 
+            #ref     => 'Best Practices Recommedation only',
+            error   => "missing content",
             message => 'no XHTML content found'
         };
     }
@@ -384,24 +256,121 @@ sub _process_checks {
 # -------------------------------------
 # Private Methods : Check Routines
 
+sub _check_case {
+    my ($self,$tag) = @_;
+
+    if($self->{case} == 1) {
+        push @{ $self->{ERRORS} }, {
+            #ref     => 'Best Practices Recommedation only',
+            error   => "tag <$tag->[0]> should be lowercase",
+            message => "W3C recommends use of lowercase in HTML 4 (<$tag->[0]>)" . ($FIXED ? " [row $tag->[2], column $tag->[3]]" : '')
+        };
+    } elsif($self->{case} == 2) {
+        push @{ $self->{ERRORS} }, {
+            #ref     => 'Best Practices Recommedation only',
+            error   => "tag <$tag->[0]> must be lowercase",
+            message => "declaration requires lowercase tags (<$tag->[0]>)" . ($FIXED ? " [row $tag->[2], column $tag->[3]]" : '')
+        };
+    }
+}
+
+sub _check_form {
+    my ($self,$tag) = @_;
+
+    if(!$self->{form}{submit}) {
+        push @{ $self->{ERRORS} }, {
+            ref     => 'WCAG v2 3.2.2 (A)', #E872
+            error   => "missing submit in <form>",
+            message => 'no submit button in form (' . ( $self->{form}{id} || '' ) . ')' . ($FIXED ? " [row $tag->[2], column $tag->[3]]" : '')
+        };
+    }
+}
+
+sub _check_form_control {
+    my ($self,$tag) = @_;
+
+    if($tag->[1]{id}) {
+        if($self->{input}{ $tag->[1]{id} }) {
+            push @{ $self->{ERRORS} }, {
+                ref     => 'WCAG v2 4.1.1 (A)', #894
+                error   => "dupliate id in <$tag->[0]> tag",
+                message => "all <$tag->[0]> tags require a unique id ($tag->[1]{id})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+            };
+        } else {
+            $self->{input}{ $tag->[1]{id} }{type}   = 'textarea';
+            $self->{input}{ $tag->[1]{id} }{title}  = $tag->[1]{title};
+            $self->{input}{ $tag->[1]{id} }{row}    = $tag->[4];
+            $self->{input}{ $tag->[1]{id} }{column} = $tag->[5];
+        }
+    } elsif(!$tag->[1]{title}) {
+        push @{ $self->{ERRORS} }, {
+            ref     => 'WCAG v2 1.1.1 (A)', #E866
+            error   => "missing title or id (for label) in <$tag->[0]> tag",
+            message => "all <$tag->[0]> tags require a <label> or a title attribute ($tag->[1]{name})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+        };
+    }
+}
+
+sub _check_form_submit {
+    my ($self,$tag) = @_;
+
+    if($tag->[1]{type} && $tag->[1]{type} eq 'submit') {
+        if(%{$self->{form}}) {
+            $self->{form}{submit} = 1;
+        } else {
+            push @{ $self->{ERRORS} }, {
+                #ref     => 'Best Practices Recommedation only',
+                error   => "submit outside of <form> tag",
+                message => 'submit button should be associated with a form' . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+            };
+        }
+    }
+}
+
+sub _check_label {
+    my ($self,$tag) = @_;
+
+    if($tag->[1]{for}) {
+        if($self->{label}{ $tag->[1]{for} }) {
+            push @{ $self->{ERRORS} }, {
+                #ref     => 'Best Practices Recommedation only',
+                error   => "dupliate <$tag->[0]> tag for unique id ($tag->[1]{for})",
+                message => "all <$tag->[0]> tags should reference a unique id ($tag->[1]{for})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+            };
+        } else {
+            $self->{label}{ $tag->[1]{for} }{type}   = 'label';
+            $self->{label}{ $tag->[1]{for} }{row}    = $tag->[4];
+            $self->{label}{ $tag->[1]{for} }{column} = $tag->[5];
+        }
+    } else {
+        push @{ $self->{ERRORS} }, {
+            ref     => 'WCAG v2 1.3.1 (A)', #885
+            error   => "missing 'for' attribute in <$tag->[0]> tag",
+            message => "all <$tag->[0]> tags must reference an <input> tag id" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+        };
+    }
+}
+
 sub _check_image {
     my ($self,$tag) = @_;
-    
+
     return  if(defined $tag->[1]{alt});
 
     push @{ $self->{ERRORS} }, {
-        error => "missing alt from <$tag->[0]> tag", 
+        ref     => 'WCAG v2 1.1.1 (A)', #E860
+        error   => "missing alt from <$tag->[0]> tag",
         message => "no alt attribute in <$tag->[0]> tag ($tag->[1]{src})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
     };
 }
 
 sub _check_link {
     my ($self,$tag) = @_;
-    
+
     return  unless(defined $tag->[1]{href} && !defined $tag->[1]{title});
 
     push @{ $self->{ERRORS} }, {
-        error => "missing title from <$tag->[0]> tag", 
+        ref     => 'WCAG v2 1.1.1 (A)', #E871
+        error   => "missing title from <$tag->[0]> tag",
         message => "no title attribute in a tag ($tag->[1]{href}, '$tag->[3]')" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
     };
 }
@@ -417,55 +386,125 @@ sub _check_format {
     return  unless($formats{$tag->[0]});
 
     push @{ $self->{ERRORS} }, {
-        error => "<$formats{$tag->[0]}> tag is preferred over <$tag->[0]> tag", 
+        ref     => 'WCAG v2 1.3.1 (A)', #E892
+        error   => "<$formats{$tag->[0]}> tag is preferred over <$tag->[0]> tag",
         message => "Use CSS for presentation effects, or use <$formats{$tag->[0]}> for emphasis not <$tag->[0]> tag" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
     };
 }
 
 sub _check_title {
     my ($self,$tag) = @_;
-    
+
     return  if(defined $tag->[1]{title});
 
     push @{ $self->{ERRORS} }, {
-        error => "missing title from <$tag->[0]> tag", 
+        #ref     => 'WCAG v2 1.1.1 (A)',
+        error   => "missing title from <$tag->[0]> tag",
         message => "no title attribute in <$tag->[0]> tag" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
     };
 }
 
 sub _check_title_summary {
     my ($self,$tag) = @_;
-    
+
     return  if(defined $tag->[1]{title} || defined $tag->[1]{summary});
 
     push @{ $self->{ERRORS} }, {
-        error => "missing title/summary from <$tag->[0]> tag", 
+        ref     => 'WCAG v2 1.3.1 (A)', #E879
+        error   => "missing title/summary from <$tag->[0]> tag",
         message => "no title or summary attribute in <$tag->[0]> tag" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
     };
 }
 
 sub _check_width {
     my ($self,$tag) = @_;
-    
+
     return  unless($self->{level} > 1);
     return  unless(defined $tag->[1]{width} && $tag->[1]{width} =~ /^\d+$/);
 
     push @{ $self->{ERRORS} }, {
-        error => "absolute units used in width attribute for <$tag->[0]> tag", 
+        ref     => 'WCAG v2 1.4.4 (AA)',    #E910
+        error   => "absolute units used in width attribute for <$tag->[0]> tag",
         message => "use relative (or CSS), rather than absolute units for width attribute in <$tag->[0]> tag" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
     };
 }
 
 sub _check_height {
     my ($self,$tag) = @_;
-    
+
     return  unless($self->{level} > 1);
     return  unless(defined $tag->[1]{height} && $tag->[1]{height} =~ /^\d+$/);
 
     push @{ $self->{ERRORS} }, {
-        error => "absolute units used in height attribute for <$tag->[0]> tag", 
+        ref     => 'WCAG v2 1.4.4 (AA)',    #E910
+        error   => "absolute units used in height attribute for <$tag->[0]> tag",
         message => "use relative (or CSS), rather than absolute units for height attribute in <$tag->[0]> tag" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
     };
+}
+
+sub _check_object {
+    my ($self,$tag,$p) = @_;
+
+    # do we have simple text?
+    my $x = $p->get_text();
+    $x =~ s/\s+//gs;
+    return  if($x);
+
+    my @token;
+    my $found;
+    while( my $t = $p->get_token() ) {
+        unshift @token, $t;
+        next    unless($t->[0] eq 'S' || $t->[0] eq 'E');
+
+        if($t->[0] eq 'E' && $t->[1] eq 'object') {
+            last;
+        } elsif($t->[0] eq 'S' && $t->[1] eq 'p') {
+            $x = $p->get_text();
+            $x =~ s/\s+//gs;
+            $found = 1  if($x);
+        } elsif($t->[0] eq 'S' && $t->[1] eq 'img') {
+            $found = 1  if($t->[2]{alt});
+        }
+
+        last    if($found);
+    }
+
+    # put back tokens
+    $p->unget_token($_) for(@token);
+
+    return  if($found);
+
+    push @{ $self->{ERRORS} }, {
+        ref     => 'WCAG v2 1.1.1 (A)', #E865
+        error   => "<object> tags should have a text alternative",
+        message => qq{No alternative text (e.g. <p> or <img alt="">) found for <object> tag} . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+    };
+}
+
+sub _check_labelling {
+    my ($self) = @_;
+
+    for my $input (keys %{$self->{input}}) {
+        next    if($self->{input}{$input}{type} && $self->{input}{$input}{type} =~ /hidden|submit|reset|button/);
+        next    if($self->{label}{$input});
+        next    if($self->{input}{$input}{title});
+
+        push @{ $self->{ERRORS} }, {
+            ref     => 'WCAG v2 1.1.1 (A)', #E866
+            error   => "missing label for <input> tag",
+            message => "all <$self->{input}{$input}{type}> tags require a unique <label> tag or a title attribute ($input)" . ($FIXED ? " [row $self->{input}{$input}{row}, column $self->{input}{$input}{column}]" : '')
+        };
+    }
+
+    for my $input (keys %{$self->{label}}) {
+        next    if($self->{input}{$input});
+
+        push @{ $self->{ERRORS} }, {
+            ref     => 'WCAG v2 1.3.1 (A)', #E895
+            error   => "missing input for <label> tag",
+            message => "all <label> tags should reference a unique <input> tag ($input)" . ($FIXED ? " [row $self->{label}{$input}{row}, column $self->{label}{$input}{column}]" : '')
+        };
+    }
 }
 
 # -------------------------------------
