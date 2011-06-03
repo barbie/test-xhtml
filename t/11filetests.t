@@ -13,9 +13,9 @@ my $results = $FIXED ? './t/samples/result11b.log' : './t/samples/result11.log';
 my $logfile = './test11.log';
 unlink($logfile);
 
-SKIP: {
-	skip "Can't see a network connection", 6   if(pingtest());
-#{
+#SKIP: {
+#	skip "Can't see a network connection", 1   if(pingtest());
+{
     setlog( logfile => $logfile, logclean => 1 );
 
     my $tests = "t/samples/11-filetests.csv";
