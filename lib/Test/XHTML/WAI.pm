@@ -140,7 +140,10 @@ sub _print_errors {
     my $str = "\nErrors:\n" ;
     my $i = 1;
     for my $error (@{$self->{ERRORS}}) {
-        $str .= "$i. $error->{message}\n";
+        $str .= "$i. $error->{error}: $error->{message}\n";
+        $str .= " $error->{ref}"                            if($error->{ref});
+        $str .= " [row $error->{row}, col $error->{col}]"   if($error->{row} && $error->{col} && $FIXED);
+        $str .= "\n";
         $i++;
     }
     return $str;
@@ -265,14 +268,18 @@ sub _check_case {
     if($self->{case} == 1) {
         push @{ $self->{ERRORS} }, {
             #ref     => 'Best Practices Recommedation only',
-            error   => "tag <$tag->[0]> should be lowercase",
-            message => "W3C recommends use of lowercase in HTML 4 (<$tag->[0]>)" . ($FIXED ? " [row $tag->[2], column $tag->[3]]" : '')
+            error   => "C001",
+            message => "W3C recommends use of lowercase in HTML 4 (<$tag->[0]>)",
+            row     => $tag->[2],
+            col     => $tag->[3]
         };
     } elsif($self->{case} == 2) {
         push @{ $self->{ERRORS} }, {
             #ref     => 'Best Practices Recommedation only',
-            error   => "tag <$tag->[0]> must be lowercase",
-            message => "declaration requires lowercase tags (<$tag->[0]>)" . ($FIXED ? " [row $tag->[2], column $tag->[3]]" : '')
+            error   => "C002",
+            message => "declaration requires lowercase tags (<$tag->[0]>)",
+            row     => $tag->[2],
+            col     => $tag->[3]
         };
     }
 }
@@ -283,8 +290,10 @@ sub _check_form {
     if(!$self->{form}{submit}) {
         push @{ $self->{ERRORS} }, {
             ref     => 'WCAG v2 3.2.2 (A)', #E872
-            error   => "missing submit in <form>",
-            message => 'no submit button in form (' . ( $self->{form}{id} || '' ) . ')' . ($FIXED ? " [row $tag->[2], column $tag->[3]]" : '')
+            error   => "W001",
+            message => 'no submit button in form (' . ( $self->{form}{id} || '' ) . ')',
+            row     => $tag->[2],
+            col     => $tag->[3]
         };
     }
 }
@@ -296,8 +305,10 @@ sub _check_form_control {
         if($self->{input}{ $tag->[1]{id} }) {
             push @{ $self->{ERRORS} }, {
                 ref     => 'WCAG v2 4.1.1 (A)', #894
-                error   => "dupliate id in <$tag->[0]> tag",
-                message => "all <$tag->[0]> tags require a unique id ($tag->[1]{id})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+                error   => "W002",
+                message => "all <$tag->[0]> tags require a unique id ($tag->[1]{id})",
+                row     => $tag->[4],
+                col     => $tag->[5]
             };
         } else {
             $self->{input}{ $tag->[1]{id} }{type}   = $tag->[1]{type};
@@ -312,8 +323,10 @@ sub _check_form_control {
     } elsif(!$tag->[1]{title}) {
         push @{ $self->{ERRORS} }, {
             ref     => 'WCAG v2 1.1.1 (A)', #E866
-            error   => "missing title or id (for label) in <$tag->[0]> tag",
-            message => "all <$tag->[0]> tags require a <label> or a title attribute ($tag->[1]{name})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+            error   => "W003",
+            message => "all <$tag->[0]> tags require a <label> or a title attribute ($tag->[1]{name})",
+            row     => $tag->[4],
+            col     => $tag->[5]
         };
     }
 }
@@ -327,8 +340,10 @@ sub _check_form_submit {
         } else {
             push @{ $self->{ERRORS} }, {
                 #ref     => 'Best Practices Recommedation only',
-                error   => "submit outside of <form> tag",
-                message => 'submit button should be associated with a form' . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+                error   => "CW001",
+                message => 'submit button should be associated with a form',
+                row     => $tag->[4],
+                col     => $tag->[5]
             };
         }
     }
@@ -341,8 +356,10 @@ sub _check_label {
         if($self->{label}{ $tag->[1]{for} }) {
             push @{ $self->{ERRORS} }, {
                 #ref     => 'Best Practices Recommedation only',
-                error   => "dupliate <$tag->[0]> tag for unique id ($tag->[1]{for})",
-                message => "all <$tag->[0]> tags should reference a unique id ($tag->[1]{for})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+                error   => "CW002",
+                message => "all <$tag->[0]> tags should reference a unique id ($tag->[1]{for})",
+                row     => $tag->[4],
+                col     => $tag->[5]
             };
         } else {
             $self->{label}{ $tag->[1]{for} }{type}   = 'label';
@@ -352,8 +369,10 @@ sub _check_label {
     } else {
         push @{ $self->{ERRORS} }, {
             ref     => 'WCAG v2 1.3.1 (A)', #885
-            error   => "missing 'for' attribute in <$tag->[0]> tag",
-            message => "all <$tag->[0]> tags must reference an <input> tag id" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+            error   => "W004",
+            message => "all <$tag->[0]> tags must reference an <input> tag id",
+            row     => $tag->[4],
+            col     => $tag->[5]
         };
     }
 }
@@ -365,8 +384,10 @@ sub _check_image {
 
     push @{ $self->{ERRORS} }, {
         ref     => 'WCAG v2 1.1.1 (A)', #E860
-        error   => "missing alt from <$tag->[0]> tag",
-        message => "no alt attribute in <$tag->[0]> tag ($tag->[1]{src})" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+        error   => "W005",
+        message => "no alt attribute in <$tag->[0]> tag ($tag->[1]{src})",
+        row     => $tag->[4],
+        col     => $tag->[5]
     };
 }
 
@@ -379,8 +400,10 @@ sub _check_link {
         if($self->{links}{ $tag->[1]{href} } && $self->{links}{ $tag->[1]{href} } ne $tag->[1]{title}) {
             push @{ $self->{ERRORS} }, {
                 ref     => 'WCAG v2 2.4.4 (A)', #E898
-                error   => "different titles used for the same link",
-                message => "repeated links should use the same titles ($tag->[1]{href}, '$self->{links}{ $tag->[1]{href} }' => '$tag->[1]{title}')" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+                error   => "W006",
+                message => "repeated links should use the same titles ($tag->[1]{href}, '$self->{links}{ $tag->[1]{href} }' => '$tag->[1]{title}')",
+                row     => $tag->[4],
+                col     => $tag->[5]
             };
         } else {
             $self->{links}{ $tag->[1]{href} } = $tag->[1]{title};
@@ -390,8 +413,10 @@ sub _check_link {
 
     push @{ $self->{ERRORS} }, {
         ref     => 'WCAG v2 1.1.1 (A)', #E871
-        error   => "missing title from <$tag->[0]> tag",
-        message => "no title attribute in a tag ($tag->[1]{href}, '$tag->[3]')" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+        error   => "W007",
+        message => "no title attribute in a tag ($tag->[1]{href}, '$tag->[3]')",
+        row     => $tag->[4],
+        col     => $tag->[5]
     };
 }
 
@@ -407,8 +432,10 @@ sub _check_format {
 
     push @{ $self->{ERRORS} }, {
         ref     => 'WCAG v2 1.3.1 (A)', #E892
-        error   => "<$formats{$tag->[0]}> tag is preferred over <$tag->[0]> tag",
-        message => "use CSS for presentation effects, or use <$formats{$tag->[0]}> for emphasis not <$tag->[0]> tag" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+        error   => "W008",
+        message => "use CSS for presentation effects, or use <$formats{$tag->[0]}> for emphasis not <$tag->[0]> tag",
+        row     => $tag->[4],
+        col     => $tag->[5]
     };
 }
 
@@ -419,8 +446,10 @@ sub _check_title {
 
     push @{ $self->{ERRORS} }, {
         #ref     => 'WCAG v2 1.1.1 (A)',
-        error   => "missing title from <$tag->[0]> tag",
-        message => "no title attribute in <$tag->[0]> tag" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+        error   => "W009",
+        message => "no title attribute in <$tag->[0]> tag",
+        row     => $tag->[4],
+        col     => $tag->[5]
     };
 }
 
@@ -431,8 +460,10 @@ sub _check_title_summary {
 
     push @{ $self->{ERRORS} }, {
         ref     => 'WCAG v2 1.3.1 (A)', #E879
-        error   => "missing title/summary from <$tag->[0]> tag",
-        message => "no title or summary attribute in <$tag->[0]> tag" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+        error   => "W010",
+        message => "no title or summary attribute in <$tag->[0]> tag",
+        row     => $tag->[4],
+        col     => $tag->[5]
     };
 }
 
@@ -444,8 +475,10 @@ sub _check_width {
 
     push @{ $self->{ERRORS} }, {
         ref     => 'WCAG v2 1.4.4 (AA)',    #E910
-        error   => "absolute units used in width attribute for <$tag->[0]> tag",
-        message => "use relative (or CSS), rather than absolute units for width attribute in <$tag->[0]> tag" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+        error   => "W011",
+        message => "use relative (or CSS), rather than absolute units for width attribute in <$tag->[0]> tag",
+        row     => $tag->[4],
+        col     => $tag->[5]
     };
 }
 
@@ -457,8 +490,10 @@ sub _check_height {
 
     push @{ $self->{ERRORS} }, {
         ref     => 'WCAG v2 1.4.4 (AA)',    #E910
-        error   => "absolute units used in height attribute for <$tag->[0]> tag",
-        message => "use relative (or CSS), rather than absolute units for height attribute in <$tag->[0]> tag" . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+        error   => "W012",
+        message => "use relative (or CSS), rather than absolute units for height attribute in <$tag->[0]> tag",
+        row     => $tag->[4],
+        col     => $tag->[5]
     };
 }
 
@@ -496,8 +531,10 @@ sub _check_object {
 
     push @{ $self->{ERRORS} }, {
         ref     => 'WCAG v2 1.1.1 (A)', #E865
-        error   => "<object> tags should have a text alternative",
-        message => qq{No alternative text (e.g. <p> or <img alt="">) found for <object> tag} . ($FIXED ? " [row $tag->[4], column $tag->[5]]" : '')
+        error   => "W013",
+        message => qq{No alternative text (e.g. <p> or <img alt="">) found for <object> tag},
+        row     => $tag->[4],
+        col     => $tag->[5]
     };
 }
 
@@ -511,8 +548,10 @@ sub _check_labelling {
 
         push @{ $self->{ERRORS} }, {
             ref     => 'WCAG v2 1.1.1 (A)', #E866
-            error   => "missing label for <input> tag",
-            message => "all <$self->{input}{$input}{type}> tags require a unique <label> tag or a title attribute ($input)" . ($FIXED ? " [row $self->{input}{$input}{row}, column $self->{input}{$input}{column}]" : '')
+            error   => "W014",
+            message => "all <$self->{input}{$input}{type}> tags require a unique <label> tag or a title attribute ($input)",
+            row     => $self->{input}{$input}{row},
+            col     => $self->{input}{$input}{column}
         };
     }
 
@@ -521,8 +560,10 @@ sub _check_labelling {
 
         push @{ $self->{ERRORS} }, {
             ref     => 'WCAG v2 1.3.1 (A)', #E895
-            error   => "missing input for <label> tag",
-            message => "all <label> tags should reference a unique <input> tag ($input)" . ($FIXED ? " [row $self->{label}{$input}{row}, column $self->{label}{$input}{column}]" : '')
+            error   => "W015",
+            message => "all <label> tags should reference a unique <input> tag ($input)",
+            row     => $self->{label}{$input}{row},
+            col     => $self->{label}{$input}{column}
         };
     }
 }
