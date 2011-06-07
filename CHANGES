@@ -1,5 +1,11 @@
 Revision history for Test-XHTML
 
+0.09	current
+        - restructured errors:
+          - row/col now separate key pairs
+          - 'error' key now holds a code number.
+          - _print_errors() now combines all elements not just the message.
+
 0.08	03/06/2011
         - updated README.
         - added object check (WCAG v2 1.1.1 (A)).
