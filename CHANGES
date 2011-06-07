@@ -1,6 +1,6 @@
 Revision history for Test-XHTML
 
-0.09	current
+0.09	07/06/2011
         - restructured errors:
           - row/col now separate key pairs
           - 'error' key now holds a code number.

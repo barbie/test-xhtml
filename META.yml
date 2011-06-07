@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                     Test-XHTML
-version:                  0.08
+version:                  0.09
 abstract:                 Test web page code validation.
 author:
   - Barbie <barbie@cpan.org>
@@ -35,13 +35,13 @@ build_requires:
 provides:
   Test::XHTML:
     file:     lib/Test/XHTML.pm
-    version:  0.08
+    version:  0.09
   Test::XHTML::Valid:
     file:     lib/Test/XHTML/Valid.pm
-    version:  0.08
+    version:  0.09
   Test::XHTML::WAI:
     file:     lib/Test/XHTML/WAI.pm
-    version:  0.08
+    version:  0.09
 no_index:
   directory:
     - t
