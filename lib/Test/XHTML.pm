@@ -10,7 +10,7 @@ $VERSION = '0.08';
 
 =head1 NAME
 
-Test::XHTML - Test your web page DTD validation.
+Test::XHTML - Test web page code validation.
 
 =head1 SYNOPSIS
 
@@ -21,7 +21,8 @@ Test::XHTML - Test your web page DTD validation.
 
 =head1 DESCRIPTION
 
-Test the DTD Validation of a list of URLs.
+Test the validation of a list of URLs. This includes DTD Validation, WAI WCAG
+v2.0 compliance and basic Best Practices.
 
 =cut
 
@@ -33,6 +34,7 @@ use Data::Dumper;
 use Test::Builder;
 use Test::XHTML::Valid;
 use Test::XHTML::WAI;
+use Test::XHTML::Critic;
 use WWW::Mechanize;
 
 # -------------------------------------
@@ -41,6 +43,7 @@ use WWW::Mechanize;
 my $mech    = WWW::Mechanize->new();
 my $txv     = Test::XHTML::Valid->new(mech => $mech);
 my $txw     = Test::XHTML::WAI->new();
+my $txc     = Test::XHTML::Critic->new();
 my $Test    = Test::Builder->new();
 
 sub import {
@@ -87,37 +90,15 @@ sub runtests {
         } elsif($cmd eq 'file') {
             $type = $cmd;
             $link = $text;
-            if($config{xhtml}) {
-                $txv->clear();
-                $txv->process_file($link);
-                my $result = $txv->process_results();
-                $Test->is_num($result->{PASS},1,"XHTML validity check for '$link'");
 
-                if($result->{PASS} != 1) {
-                    $Test->diag($txv->errstr());
-                    $Test->diag(Dumper($txv->errors())) if($config{'dump'});
-                    $Test->diag(Dumper($result))        if($config{'dump'});
-                }
-            } else {
-                $txv->retrieve_file($link);
-            }
+            _check_xhtml(\%config,$type,$link);
 
             $content = $txv->content();
             $label ||= "Got FILE '$link'";
             $Test->ok($content,$label);
 
-            if($config{wai}) {
-                $txw->clear();
-                $txw->validate($content);
-                my $result = $txw->results();
-                $Test->is_num($result->{PASS},1,"Content passes basic WAI compliance checks for '$link'");
-                if($result->{PASS} != 1) {
-                    $Test->diag($txw->errstr());
-                    $Test->diag(Dumper($txw->errors()))     if($config{'dump'});
-                    $Test->diag(Dumper($result))            if($config{'dump'});
-                    $Test->diag(Dumper($content))           if($config{'dump'} && $config{'dump'} == 2);
-                }
-            }
+            _check_wai(\%config,$link,$content);
+            _check_critic(\%config,$link,$content);
 
             for my $all (@all) {
                 my $ignore = 0;
@@ -142,37 +123,15 @@ sub runtests {
         } elsif($cmd eq 'url') {
             $type = $cmd;
             $link = $text;
-            if($config{xhtml}) {
-                $txv->clear();
-                $txv->process_link($link);
-                my $result = $txv->process_results();
-                $Test->is_num($result->{PASS},1,"XHTML validity check for '$link'");
 
-                if($result->{PASS} != 1) {
-                    $Test->diag($txv->errstr());
-                    $Test->diag(Dumper($txv->errors())) if($config{'dump'});
-                    $Test->diag(Dumper($result))        if($config{'dump'});
-                }
-            } else {
-                $txv->retrieve_url($link);
-            }
+            _check_xhtml(\%config,$type,$link);
 
             $content = $txv->content();
             $label ||= "Got URL '$link'";
             $Test->ok($content,$label);
 
-            if($config{wai}) {
-                $txw->clear();
-                $txw->validate($content);
-                my $result = $txw->results();
-                $Test->is_num($result->{PASS},1,"Content passes basic WAI compliance checks for '$link'");
-                if($result->{PASS} != 1) {
-                    $Test->diag($txw->errstr());
-                    $Test->diag(Dumper($txw->errors()))     if($config{'dump'});
-                    $Test->diag(Dumper($result))            if($config{'dump'});
-                    $Test->diag(Dumper($content))           if($config{'dump'} && $config{'dump'} == 2);
-                }
-            }
+            _check_wai(\%config,$link,$content);
+            _check_critic(\%config,$link,$content);
 
             for my $all (@all) {
                 my $ignore = 0;
@@ -236,31 +195,10 @@ sub runtests {
                     $content = $mech->content();
                     $link = $mech->base();
 
-                    if($config{xhtml}) {
-                        $txv->clear();
-                        $txv->process_xml($content);
-                        my $result = $txv->process_results();
-                        $Test->is_num($result->{PASS},1,"XHTML validity check for '$link'");
+                    _check_xhtml(\%config,'xml',$content);
+                    _check_wai(\%config,$link,$content);
+                    _check_critic(\%config,$link,$content);
 
-                        if($result->{PASS} != 1) {
-                            $Test->diag($txv->errstr());
-                            $Test->diag(Dumper($txv->errors())) if($config{'dump'});
-                            $Test->diag(Dumper($result))        if($config{'dump'});
-                        }
-                    }
-
-                    if($config{wai}) {
-                        $txw->clear();
-                        $txw->validate($content);
-                        my $result = $txw->results();
-                        $Test->is_num($result->{PASS},1,"Content passes basic WAI compliance checks for '$link'");
-                        if($result->{PASS} != 1) {
-                            $Test->diag($txw->errstr());
-                            $Test->diag(Dumper($txw->errors()))     if($config{'dump'});
-                            $Test->diag(Dumper($result))            if($config{'dump'});
-                            $Test->diag(Dumper($content))           if($config{'dump'} && $config{'dump'} == 2);
-                        }
-                    }
                 } else {
                     $content = '';
                 }
@@ -270,6 +208,64 @@ sub runtests {
         }
     }
     $fh->close;
+}
+
+sub _check_xhtml {
+    my ($config,$type,$link) = @_;
+
+    if($config->{ xhtml}) {
+        $txv->clear();
+
+           if($type eq 'file')  { $txv->process_file($link); }
+        elsif($type eq 'url')   { $txv->process_link($link); }
+        elsif($type eq 'xml')   { $txv->process_xml($link); }
+
+        my $result = $txv->process_results();
+        $Test->is_num($result->{PASS},1,"XHTML validity check for '$link'");
+
+        if($result->{PASS} != 1) {
+            $Test->diag($txv->errstr());
+            $Test->diag(Dumper($txv->errors())) if($config->{ 'dump'});
+            $Test->diag(Dumper($result))        if($config->{ 'dump'});
+        }
+    } else {
+           if($type eq 'file')  { $txv->retrieve_file($link); }
+        elsif($type eq 'url')   { $txv->retrieve_url($link); }
+    }
+}
+
+sub _check_wai {
+    my ($config,$link,$content) = @_;
+
+    if($config->{ wai}) {
+        $txw->clear();
+        $txw->validate($content);
+        my $result = $txw->results();
+        $Test->is_num($result->{PASS},1,"Content passes basic WAI compliance checks for '$link'");
+        if($result->{PASS} != 1) {
+            $Test->diag($txw->errstr());
+            $Test->diag(Dumper($txw->errors()))     if($config->{ 'dump'});
+            $Test->diag(Dumper($result))            if($config->{ 'dump'});
+            $Test->diag(Dumper($content))           if($config->{ 'dump'} && $config->{ 'dump'} == 2);
+        }
+    }
+}
+
+sub _check_critic {
+    my ($config,$link,$content) = @_;
+
+    if($config->{ critic}) {
+        $txc->clear();
+        $txc->validate($content);
+        my $result = $txc->results();
+        $Test->is_num($result->{PASS},1,"Content passes basic page critique checks for '$link'");
+        if($result->{PASS} != 1) {
+            $Test->diag($txc->errstr());
+            $Test->diag(Dumper($txc->errors()))     if($config->{ 'dump'});
+            $Test->diag(Dumper($result))            if($config->{ 'dump'});
+            $Test->diag(Dumper($content))           if($config->{ 'dump'} && $config->{ 'dump'} == 2);
+        }
+    }
 }
 
 sub setlog {

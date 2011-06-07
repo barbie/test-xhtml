@@ -8,6 +8,7 @@ bin/xhtml-valid
 examples/100-external-simple.csv
 examples/100-external-simple.t
 lib/Test/XHTML.pm
+lib/Test/XHTML/Critic.pm
 lib/Test/XHTML/Valid.pm
 lib/Test/XHTML/WAI.pm
 t/01use.t

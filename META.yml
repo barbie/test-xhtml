@@ -1,7 +1,7 @@
 --- #YAML:1.0
 name:                     Test-XHTML
 version:                  0.08
-abstract:                 Test your web page DTD validation.
+abstract:                 Test web page code validation.
 author:
   - Barbie <barbie@cpan.org>
 

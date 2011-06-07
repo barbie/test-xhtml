@@ -5,6 +5,8 @@ Revision history for Test-XHTML
           - row/col now separate key pairs
           - 'error' key now holds a code number.
           - _print_errors() now combines all elements not just the message.
+        - introduction of a Critic module to encourage best practices.
+        - transfer case checks from WAI to Critic.
 
 0.08	03/06/2011
         - updated README.

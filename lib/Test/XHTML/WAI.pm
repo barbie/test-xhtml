@@ -94,7 +94,7 @@ sub new {
     my $class = ref($proto) || $proto;
 
     # private data
-    my $self  = {level => 1, case => 0};
+    my $self  = {level => 1, dtdtype => 0};
     $self->{RESULTS}{$_} = 0    for(@RESULTS);
 
     bless ($self, $class);
@@ -140,9 +140,9 @@ sub _print_errors {
     my $str = "\nErrors:\n" ;
     my $i = 1;
     for my $error (@{$self->{ERRORS}}) {
-        $str .= "$i. $error->{error}: $error->{message}\n";
-        $str .= " $error->{ref}"                            if($error->{ref});
-        $str .= " [row $error->{row}, col $error->{col}]"   if($error->{row} && $error->{col} && $FIXED);
+        $str .= "$i. $error->{error}: $error->{message}";
+        $str .= " [$error->{ref}]"                              if($error->{ref});
+        $str .= " [row $error->{row}, column $error->{col}]"    if($error->{row} && $error->{col} && $FIXED);
         $str .= "\n";
         $i++;
     }
@@ -188,7 +188,7 @@ sub _process_checks {
             $declaration =~ s/\s+/ /sg;
             for my $type (keys %declarations) {
                 if($declaration =~ /$type/) {
-                    $self->{case} = $declarations{$type};
+                    $self->{dtdtype} = $declarations{$type};
                     last;
                 }
             }
@@ -198,10 +198,8 @@ sub _process_checks {
 
         while( my $tag = $p->get_tag( @TAGS ) ) {
 
-            if($tag->[0] eq uc $tag->[0]) {
-                $self->_check_case($tag);
-                $tag->[0] = lc $tag->[0];
-            }
+            # force lower case
+            $tag->[0] = lc $tag->[0];
 
             if($tag->[0] eq 'form') {
                 $self->{form} = { id => ($tag->[1]{id} || $tag->[1]{name}) };
@@ -261,28 +259,6 @@ sub _process_checks {
 
 # -------------------------------------
 # Private Methods : Check Routines
-
-sub _check_case {
-    my ($self,$tag) = @_;
-
-    if($self->{case} == 1) {
-        push @{ $self->{ERRORS} }, {
-            #ref     => 'Best Practices Recommedation only',
-            error   => "C001",
-            message => "W3C recommends use of lowercase in HTML 4 (<$tag->[0]>)",
-            row     => $tag->[2],
-            col     => $tag->[3]
-        };
-    } elsif($self->{case} == 2) {
-        push @{ $self->{ERRORS} }, {
-            #ref     => 'Best Practices Recommedation only',
-            error   => "C002",
-            message => "declaration requires lowercase tags (<$tag->[0]>)",
-            row     => $tag->[2],
-            col     => $tag->[3]
-        };
-    }
-}
 
 sub _check_form {
     my ($self,$tag) = @_;
