@@ -87,72 +87,6 @@ sub runtests {
         } elsif($cmd eq 'except') {
             push @{ $all[-1]->{except} }, $text;
 
-        } elsif($cmd eq 'file') {
-            $type = $cmd;
-            $link = $text;
-
-            _check_xhtml(\%config,$type,$link);
-
-            $content = $txv->content();
-            $label ||= "Got FILE '$link'";
-            $Test->ok($content,$label);
-
-            _check_wai(\%config,$link,$content);
-            _check_critic(\%config,$link,$content);
-
-            for my $all (@all) {
-                my $ignore = 0;
-                for my $except (@{ $all->{except} }) {
-                    next    unless($link =~ /$except/);
-                    $ignore = 1;
-                }
-
-                if($all->{type} eq 'like') {
-                    $label = $all->{label} || ".. embedded text ('$all->{text}') found for '$link'";
-                    next    if($ignore);
-                    $Test->like($content,qr!$all->{text}!, $label);
-                    $Test->diag($content)  if($content !~ m!$all->{text}! && $config{'dump'});
-                } else {
-                    $label = $all->{label} || ".. embedded text ('$all->{text}') not found for '$link'";
-                    next    if($ignore);
-                    $Test->unlike($content,qr!$all->{text}!, $label);
-                    $Test->diag($content)  if($content =~ m!$all->{text}! && $config{'dump'});
-                }
-           }
-
-        } elsif($cmd eq 'url') {
-            $type = $cmd;
-            $link = $text;
-
-            _check_xhtml(\%config,$type,$link);
-
-            $content = $txv->content();
-            $label ||= "Got URL '$link'";
-            $Test->ok($content,$label);
-
-            _check_wai(\%config,$link,$content);
-            _check_critic(\%config,$link,$content);
-
-            for my $all (@all) {
-                my $ignore = 0;
-                for my $except (@{ $all->{except} }) {
-                    next    unless($link =~ /$except/);
-                    $ignore = 1;
-                }
-
-                if($all->{type} eq 'like') {
-                    $label = $all->{label} || ".. embedded text ('$all->{text}') found for '$link'";
-                    next    if($ignore);
-                    $Test->like($content,qr!$all->{text}!, $label);
-                    $Test->diag($content)  if($content !~ m!$all->{text}! && $config{'dump'});
-                } else {
-                    $label = $all->{label} || ".. embedded text ('$all->{text}') not found for '$link'";
-                    next    if($ignore);
-                    $Test->unlike($content,qr!$all->{text}!, $label);
-                    $Test->diag($content)  if($content =~ m!$all->{text}! && $config{'dump'});
-                }
-           }
-
         } elsif($cmd eq 'body') {
             $label ||= ".. embedded text ('$text') found for '$link'";
             $Test->like($content,qr!$text!s, $label);
@@ -195,9 +129,34 @@ sub runtests {
                     $content = $mech->content();
                     $link = $mech->base();
 
-                    _check_xhtml(\%config,'xml',$content);
-                    _check_wai(\%config,$link,$content);
-                    _check_critic(\%config,$link,$content);
+                    if(my $result = _check_xhtml(\%config,'xml',$content)) {
+                        $Test->is_num($result->{PASS},1,"XHTML validity check for '$link'");
+                        if($result->{PASS} != 1) {
+                            $Test->diag($txv->errstr());
+                            $Test->diag(Dumper($txv->errors())) if($config{ 'dump'});
+                            $Test->diag(Dumper($result))        if($config{ 'dump'});
+                        }
+                    }
+
+                    if(my $result = _check_wai(\%config,$content)) {
+                        $Test->is_num($result->{PASS},1,"Content passes basic WAI compliance checks for '$link'");
+                        if($result->{PASS} != 1) {
+                            $Test->diag($txw->errstr());
+                            $Test->diag(Dumper($txw->errors()))     if($config{ 'dump'});
+                            $Test->diag(Dumper($result))            if($config{ 'dump'});
+                            $Test->diag(Dumper($content))           if($config{ 'dump'} && $config{ 'dump'} == 2);
+                        }
+                    }
+
+                    if(my $result = _check_critic(\%config,$content)) {
+                        $Test->is_num($result->{PASS},1,"Content passes basic page critique checks for '$link'");
+                        if($result->{PASS} != 1) {
+                            $Test->diag($txc->errstr());
+                            $Test->diag(Dumper($txc->errors()))     if($config{ 'dump'});
+                            $Test->diag(Dumper($result))            if($config{ 'dump'});
+                            $Test->diag(Dumper($content))           if($config{ 'dump'} && $config{ 'dump'} == 2);
+                        }
+                    }
 
                 } else {
                     $content = '';
@@ -205,6 +164,122 @@ sub runtests {
             } else {
                 $mech->field($key,$value);
             }
+
+        } elsif($cmd eq 'file') {
+            $type = $cmd;
+            $link = $text;
+
+            if(my $result = _check_xhtml(\%config,$type,$link)) {
+                $Test->is_num($result->{PASS},1,"XHTML validity check for '$link'");
+                if($result->{PASS} != 1) {
+                    $Test->diag($txv->errstr());
+                    $Test->diag(Dumper($txv->errors())) if($config{ 'dump'});
+                    $Test->diag(Dumper($result))        if($config{ 'dump'});
+                }
+            }
+
+
+            $content = $txv->content();
+            $label ||= "Got FILE '$link'";
+            $Test->ok($content,$label);
+
+            if(my $result = _check_wai(\%config,$content)) {
+                $Test->is_num($result->{PASS},1,"Content passes basic WAI compliance checks for '$link'");
+                if($result->{PASS} != 1) {
+                    $Test->diag($txw->errstr());
+                    $Test->diag(Dumper($txw->errors()))     if($config{ 'dump'});
+                    $Test->diag(Dumper($result))            if($config{ 'dump'});
+                    $Test->diag(Dumper($content))           if($config{ 'dump'} && $config{ 'dump'} == 2);
+                }
+            }
+
+            if(my $result = _check_critic(\%config,$content)) {
+                $Test->is_num($result->{PASS},1,"Content passes basic page critique checks for '$link'");
+                if($result->{PASS} != 1) {
+                    $Test->diag($txc->errstr());
+                    $Test->diag(Dumper($txc->errors()))     if($config{ 'dump'});
+                    $Test->diag(Dumper($result))            if($config{ 'dump'});
+                    $Test->diag(Dumper($content))           if($config{ 'dump'} && $config{ 'dump'} == 2);
+                }
+            }
+
+            for my $all (@all) {
+                my $ignore = 0;
+                for my $except (@{ $all->{except} }) {
+                    next    unless($link =~ /$except/);
+                    $ignore = 1;
+                }
+
+                if($all->{type} eq 'like') {
+                    $label = $all->{label} || ".. embedded text ('$all->{text}') found for '$link'";
+                    next    if($ignore);
+                    $Test->like($content,qr!$all->{text}!, $label);
+                    $Test->diag($content)  if($content !~ m!$all->{text}! && $config{'dump'});
+                } else {
+                    $label = $all->{label} || ".. embedded text ('$all->{text}') not found for '$link'";
+                    next    if($ignore);
+                    $Test->unlike($content,qr!$all->{text}!, $label);
+                    $Test->diag($content)  if($content =~ m!$all->{text}! && $config{'dump'});
+                }
+           }
+
+        } elsif($cmd eq 'url') {
+            $type = $cmd;
+            $link = $text;
+
+            if(my $result = _check_xhtml(\%config,$type,$link)) {
+                $Test->is_num($result->{PASS},1,"XHTML validity check for '$link'");
+                if($result->{PASS} != 1) {
+                    $Test->diag($txv->errstr());
+                    $Test->diag(Dumper($txv->errors())) if($config{ 'dump'});
+                    $Test->diag(Dumper($result))        if($config{ 'dump'});
+                }
+            }
+
+            $content = $txv->content();
+            $label ||= "Got URL '$link'";
+            $Test->ok($content,$label);
+
+            if(my $result = _check_wai(\%config,$content)) {
+                $Test->is_num($result->{PASS},1,"Content passes basic WAI compliance checks for '$link'");
+                if($result->{PASS} != 1) {
+                    $Test->diag($txw->errstr());
+                    $Test->diag(Dumper($txw->errors()))     if($config{ 'dump'});
+                    $Test->diag(Dumper($result))            if($config{ 'dump'});
+                    $Test->diag(Dumper($content))           if($config{ 'dump'} && $config{ 'dump'} == 2);
+                }
+            }
+
+            if(my $result = _check_critic(\%config,$content)) {
+                $Test->is_num($result->{PASS},1,"Content passes basic page critique checks for '$link'");
+                if($result->{PASS} != 1) {
+                    $Test->diag($txc->errstr());
+                    $Test->diag(Dumper($txc->errors()))     if($config{ 'dump'});
+                    $Test->diag(Dumper($result))            if($config{ 'dump'});
+                    $Test->diag(Dumper($content))           if($config{ 'dump'} && $config{ 'dump'} == 2);
+                }
+            }
+
+            for my $all (@all) {
+                my $ignore = 0;
+                for my $except (@{ $all->{except} }) {
+                    next    unless($link =~ /$except/);
+                    $ignore = 1;
+                }
+
+                if($all->{type} eq 'like') {
+                    $label = $all->{label} || ".. embedded text ('$all->{text}') found for '$link'";
+                    next    if($ignore);
+                    $Test->like($content,qr!$all->{text}!, $label);
+                    $Test->diag($content)  if($content !~ m!$all->{text}! && $config{'dump'});
+                } else {
+                    $label = $all->{label} || ".. embedded text ('$all->{text}') not found for '$link'";
+                    next    if($ignore);
+                    $Test->unlike($content,qr!$all->{text}!, $label);
+                    $Test->diag($content)  if($content =~ m!$all->{text}! && $config{'dump'});
+                }
+           }
+
         }
     }
     $fh->close;
@@ -213,59 +288,41 @@ sub runtests {
 sub _check_xhtml {
     my ($config,$type,$link) = @_;
 
-    if($config->{ xhtml}) {
+    if($config->{xhtml}) {
         $txv->clear();
 
            if($type eq 'file')  { $txv->process_file($link); }
         elsif($type eq 'url')   { $txv->process_link($link); }
         elsif($type eq 'xml')   { $txv->process_xml($link); }
 
-        my $result = $txv->process_results();
-        $Test->is_num($result->{PASS},1,"XHTML validity check for '$link'");
+        return $txv->process_results();
 
-        if($result->{PASS} != 1) {
-            $Test->diag($txv->errstr());
-            $Test->diag(Dumper($txv->errors())) if($config->{ 'dump'});
-            $Test->diag(Dumper($result))        if($config->{ 'dump'});
-        }
     } else {
            if($type eq 'file')  { $txv->retrieve_file($link); }
         elsif($type eq 'url')   { $txv->retrieve_url($link); }
     }
+
+    return;
 }
 
 sub _check_wai {
-    my ($config,$link,$content) = @_;
+    my ($config,$content) = @_;
 
-    if($config->{ wai}) {
-        $txw->clear();
-        $txw->validate($content);
-        my $result = $txw->results();
-        $Test->is_num($result->{PASS},1,"Content passes basic WAI compliance checks for '$link'");
-        if($result->{PASS} != 1) {
-            $Test->diag($txw->errstr());
-            $Test->diag(Dumper($txw->errors()))     if($config->{ 'dump'});
-            $Test->diag(Dumper($result))            if($config->{ 'dump'});
-            $Test->diag(Dumper($content))           if($config->{ 'dump'} && $config->{ 'dump'} == 2);
-        }
-    }
+    return  unless($config->{wai});
+
+    $txw->clear();
+    $txw->validate($content);
+    return $txw->results();
 }
 
 sub _check_critic {
-    my ($config,$link,$content) = @_;
+    my ($config,$content) = @_;
 
-    if($config->{ critic}) {
-        $txc->clear();
-        $txc->validate($content);
-        my $result = $txc->results();
-        $Test->is_num($result->{PASS},1,"Content passes basic page critique checks for '$link'");
-        if($result->{PASS} != 1) {
-            $Test->diag($txc->errstr());
-            $Test->diag(Dumper($txc->errors()))     if($config->{ 'dump'});
-            $Test->diag(Dumper($result))            if($config->{ 'dump'});
-            $Test->diag(Dumper($content))           if($config->{ 'dump'} && $config->{ 'dump'} == 2);
-        }
-    }
+    return  unless($config->{critic});
+
+    $txc->clear();
+    $txc->validate($content);
+    return $txc->results();
 }
 
 sub setlog {
