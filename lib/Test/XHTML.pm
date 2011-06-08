@@ -357,7 +357,7 @@ Where each field on the comma separated line represent 'cmd', 'text' and
 'label'. Valid 'cmd' values are:
 
   #             - comment line, ignores the line
-  config        - set configuration value
+  config        - set configuration value (see below)
   all body      - test that 'text' exists in body content of all urls.
   all body not  - test that 'text' does not exist in body content of all urls.
   url           - test single url
@@ -380,11 +380,46 @@ Otherwise all results are appended to the named log file.
 
   Test::XHTML::setlog( logfile => './test.log', logclean => 1 );
 
+=head1 CONFIGURATION
+
+=head2 Options
+
+There are currently 4 configuration options available, which can be listed in
+your test file as follows:
+
+    #,# Configuration,
+    config,xhtml=1,
+    config,wai=1,
+    config,critic=1,
+    config,dump=1,
+
+=head2 XHTML tests
+
+Enable DTD valiadtion tests.
+
+=head2 WAI WCAG v2.0 tests
+
+Enable WAI WCAG v2.0 tests. Values can be set to represent the level of
+compliance required.
+
+    config,wai=1,   # Level A compliance
+    config,wai=2,   # Level AA compliance
+    config,wai=3,   # Level AAA compliance (not currently available)
+
+=head2 Critique tests
+
+Enable tests for some recommended Best Practices.
+
+=head2 Dumping content
+
+Where errors occur, it may be useful to obtain the page content to diagnose 
+problems. Enabling this option will produce the content as disanostics.
+
 =head1 NOTES
 
 =head2 Test::XHTML::Valid & xhtml-valid
 
-The underlying package that provides the validation framework, is only used
+The underlying package that provides the DTD validation framework, is only used
 sparingly by Test::XHTML. Many more methods to test websites (both remote and 
 local) are supported, and can be accessed via the xhtml-valid script that 
 accompanies this distribution.
@@ -393,10 +428,11 @@ See script documentation and L<Test::XHTML::Valid> for further details.
 
 =head2 Internet Access
 
-Unfortunately XML::LibXML requires internet access to obtain all the necessary
-W3C and DTD specifications as denoted in the web pages you are attempting to
-validate. Without internet access, this distribution will skip its functional
-tests.
+In some instances XML::LibXML may require internet access to obtain all the 
+necessary W3C and DTD specifications as denoted in the web pages you are 
+attempting to validate. However, for some more common specifications, for 
+HTML4 and XHTML1, this distribution pre-loads the XML Catalog to avoid making
+calls across the internet.
 
 =head1 BUGS, PATCHES & FIXES
 
