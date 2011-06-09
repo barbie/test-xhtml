@@ -31,12 +31,12 @@ Test::XHTML::Valid - test web page DTD validation.
     # XML strings
     $txv->process_xml($xml);                # test XML as a string
 
-    $txv->process_retries();                    # retest any network failures
+    $txv->process_retries();                # retest any network failures
     my $results = $txv->process_results();
 
-    $txv->content();    # for further testing of single page content
-    $txv->errors();     # all current errors reported
-    $txv->clear();      # clear all current errors and results
+    $txv->content();            # for further testing of single page content
+    $txv->errors();             # all current errors reported
+    $txv->clear();              # clear all current errors and results
 
     $txv->retrieve_url($url);   # retrieve URL, no testing required
     $txv->retrieve_file($file); # retrieve file, no testing required
@@ -47,7 +47,7 @@ Test::XHTML::Valid - test web page DTD validation.
 =head1 DESCRIPTION
 
 Using either URLs or flat files, this module attempts to validate web pages
-according to their own DTD.
+according to the DTD schema specified within each page.
 
 =cut
 

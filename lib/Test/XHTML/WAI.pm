@@ -52,6 +52,8 @@ my @RESULTS = qw( PASS FAIL );
 # [1] https://gitorious.org/perl-html-parser/mainline/merge_requests/2
 my $FIXED = $HTML::TokeParser::VERSION > 3.57 ? 1 : 0;
 
+# For a full list of valid W3C DTD types, please see 
+# http://www.w3.org/QA/2002/04/valid-dtd-list.html
 my %declarations = (
     'xhtml1-strict.dtd'         => 2,
     'xhtml1-transitional.dtd'   => 2,

@@ -1,5 +1,10 @@
 Revision history for Test-XHTML
 
+0.10	current
+        - more complete list of obsolete and deprecated tags and attributes in
+          Critic.pm
+        - updated documentation.
+
 0.09	07/06/2011
         - restructured errors:
           - row/col now separate key pairs
