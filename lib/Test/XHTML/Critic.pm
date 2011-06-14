@@ -370,7 +370,7 @@ sub _check_deprecated {
     return  unless($deprecated{ $tag->[0] });
 
     my ($elem,@css);
-    for my $dtdtype (sort {$b <=> $a} keys %deprecated) {
+    for my $dtdtype (sort {$b <=> $a} keys %{$deprecated{$tag->[0]}}) {
         $elem ||= $deprecated{$tag->[0]}{$dtdtype}{tag};
         push @css, @{ $deprecated{$tag->[0]}{$dtdtype}{css} } if($deprecated{$tag->[0]}{$dtdtype}{css});
 
