@@ -457,7 +457,9 @@ sub _check_policy1 {
     my $x = $p->get_text();
 
     if(     $x =~ /privacy policy/i 
-        ||  ($tag->[1]{title} && $tag->[1]{title} =~ /privacy policy/i) ) {
+        ||  ($tag->[1]{title} && $tag->[1]{title} =~ /privacy policy/i)
+        ||  $x =~ /terms.*conditions/i 
+        ||  ($tag->[1]{title} && $tag->[1]{title} =~ /terms.*conditions/i) ) {
         $self->{policy}{privacy} = 1;
     }
 
