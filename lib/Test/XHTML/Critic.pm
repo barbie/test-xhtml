@@ -28,7 +28,7 @@ Test::XHTML::Critic - Basic critique checks.
 
 =head1 DESCRIPTION
 
-This module attempts to check content for depreciated elements or missing 
+This module attempts to check content for deprecated elements or missing 
 recommend elements. Some checks are based on W3C standards, while others are
 from recognised usability resources.
 
@@ -382,7 +382,7 @@ sub _check_deprecated {
                 push @{ $self->{ERRORS} }, {
                     #ref     => 'Best Practices Recommedation only',
                     error   => "C009",
-                    message => "'$attr' attribute depreciated in <$tag->[0]> tag",
+                    message => "'$attr' attribute deprecated in <$tag->[0]> tag",
                     row     => $tag->[4],
                     col     => $tag->[5]
                 };
@@ -394,7 +394,7 @@ sub _check_deprecated {
         push @{ $self->{ERRORS} }, {
             #ref     => 'Best Practices Recommedation only',
             error   => "C010",
-            message => "<$tag->[0]> has been depreciated in favour of <$elem>",
+            message => "<$tag->[0]> has been deprecated in favour of <$elem>",
             row     => $tag->[4],
             col     => $tag->[5]
         };
@@ -402,7 +402,7 @@ sub _check_deprecated {
         push @{ $self->{ERRORS} }, {
             #ref     => 'Best Practices Recommedation only',
             error   => "C011",
-            message => "<$tag->[0]> has been depreciated in favour of CSS elements (".join(',',@css).")",
+            message => "<$tag->[0]> has been deprecated in favour of CSS elements (".join(',',@css).")",
             row     => $tag->[4],
             col     => $tag->[5]
         };
@@ -416,7 +416,7 @@ sub _check_name {
         push @{ $self->{ERRORS} }, {
             #ref     => 'Best Practices Recommedation only',
             error   => "C003",
-            message => "name attribute depreciated in <$tag->[0]> tag",
+            message => "name attribute deprecated in <$tag->[0]> tag",
             row     => $tag->[4],
             col     => $tag->[5]
         };
@@ -430,7 +430,7 @@ sub _check_size {
         push @{ $self->{ERRORS} }, {
             #ref     => 'Best Practices Recommedation only',
             error   => "C004",
-            message => "name attribute depreciated in <$tag->[0]> tag",
+            message => "width and height attributes allow for pre-rendering <$tag->[0]> tags",
             row     => $tag->[4],
             col     => $tag->[5]
         };
@@ -444,7 +444,7 @@ sub _check_language {
         push @{ $self->{ERRORS} }, {
             #ref     => 'Best Practices Recommedation only',
             error   => "C005",
-            message => "langauge attribute depreciated in <$tag->[0]> tag",
+            message => "langauge attribute deprecated in <$tag->[0]> tag",
             row     => $tag->[4],
             col     => $tag->[5]
         };
@@ -501,7 +501,7 @@ sub _check_title {
     }
 }
 
-sub _check_depreciated {
+sub _check_deprecated {
     my ($self,$tag) = @_;
 }
 
