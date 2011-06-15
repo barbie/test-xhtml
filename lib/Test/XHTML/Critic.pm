@@ -503,10 +503,6 @@ sub _check_title {
     }
 }
 
-sub _check_deprecated {
-    my ($self,$tag) = @_;
-}
-
 # -------------------------------------
 # Private Methods : Other
 
