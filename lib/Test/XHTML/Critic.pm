@@ -501,6 +501,16 @@ sub _check_title {
             col     => $tag->[5]
         };
     }
+
+    if($tag->[2] =~ /['"(){}\[\]]/) {
+        push @{ $self->{ERRORS} }, {
+            #ref     => 'Best Practices Recommedation only',
+            error   => "C009",
+            message => q!avoid using the characters '"(){}[] in <title> tag!,
+            row     => $tag->[4],
+            col     => $tag->[5]
+        };
+    }
 }
 
 # -------------------------------------
