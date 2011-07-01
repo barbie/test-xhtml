@@ -315,7 +315,7 @@ sub _process_checks {
             } elsif($tag->[0] eq 'script') {
                 $self->_check_language($tag);
             } elsif($tag->[0] eq 'title') {
-                $self->_check_title($tag);
+                $self->_check_title($tag,$p);
             }
         }
 
@@ -490,9 +490,11 @@ sub _check_policy2 {
 }
 
 sub _check_title {
-    my ($self,$tag) = @_;
+    my ($self,$tag,$p) = @_;
 
-    if(length $tag->[2] > 64) {
+    my $x = $p->get_text();
+
+    if(length $x > 64) {
         push @{ $self->{ERRORS} }, {
             #ref     => 'Best Practices Recommedation only',
             error   => "C008",
@@ -502,11 +504,12 @@ sub _check_title {
         };
     }
 
-    if($tag->[2] =~ /['"(){}\[\]]/) {
+use Data::Dumper;
+    if($x =~ /['"(){}\[\]]/) {
         push @{ $self->{ERRORS} }, {
             #ref     => 'Best Practices Recommedation only',
             error   => "C009",
-            message => q!avoid using the characters '"(){}[] in <title> tag!,
+            message => qq!avoid using the characters '"(){}[] in <title> tag - <$x>!,
             row     => $tag->[4],
             col     => $tag->[5]
         };
