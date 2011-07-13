@@ -508,7 +508,7 @@ sub _check_title {
         push @{ $self->{ERRORS} }, {
             #ref     => 'Best Practices Recommedation only',
             error   => "C009",
-            message => qq!avoid using the characters '"(){}[] in <title> tag [$x]!,
+            message => qq!avoid using the characters '"(){}[] in <title> tag - <$x>!,
             row     => $tag->[4],
             col     => $tag->[5]
         };
