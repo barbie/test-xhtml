@@ -5,6 +5,8 @@ Revision history for Test-XHTML
           Critic.pm
         - updated documentation.
         - added check for unrecommended characters in title into Critic.
+        - realigned deprecated checks
+        - provided more info for image checks.
 
 0.09	07/06/2011
         - restructured errors:

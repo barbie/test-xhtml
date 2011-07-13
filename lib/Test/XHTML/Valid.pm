@@ -395,8 +395,8 @@ sub _parse_message {
 
     return $e   unless($e && ref($e));
     while (defined $e->{_prev}) { $e = $e->{_prev} };
-    return $e->{message};
-    #return "[$e->{line}:$e->{column}] $e->{message}";
+    #return $e->{message};
+    return "[$e->{line}:$e->{column}] $e->{message}";
 }
 
 sub _ignore {
