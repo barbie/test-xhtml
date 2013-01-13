@@ -5,6 +5,7 @@ Revision history for Test-XHTML
         - updated META files.
         - added minimum perl version (5.006).
         - reworked Makefile.PL for clarity.
+        - Artistic License v2 now sole license.
 
 0.10    2011-07-01
         - more complete list of obsolete and deprecated tags and attributes in

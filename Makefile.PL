@@ -28,7 +28,7 @@ WriteMakefile(
         'XML::LibXML'           => '1.70',
 
         # used in scripts
-        'Getopt::Long'          => '0'  # xhtml-valid script only
+        'Getopt::Long'          => '0', # xhtml-valid script only
 
         # used in testing
         'Test::Builder::Tester' => '0',
