@@ -9,4 +9,3 @@ BEGIN {
 	use_ok( 'Test::XHTML::WAI' );
 	use_ok( 'Test::XHTML::Critic' );
 }
-

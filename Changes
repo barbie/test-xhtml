@@ -1,12 +1,19 @@
 Revision history for Test-XHTML
 
-0.10	01/07/2011
+        - change file dates changed to meet W3CDTF standards.
+        - updated test suite.
+        - updated META files.
+        - added minimum perl version (5.006).
+        - reworked Makefile.PL for clarity.
+
+0.10    2011-07-01
         - more complete list of obsolete and deprecated tags and attributes in
           Critic.pm
         - updated documentation.
         - added check for unrecommended characters in title into Critic.
+        - latest version of HTML::TokeParser (3.69) includes patch for row/col.
 
-0.09	07/06/2011
+0.09    2011-06-07
         - restructured errors:
           - row/col now separate key pairs
           - 'error' key now holds a code number.
@@ -14,7 +21,7 @@ Revision history for Test-XHTML
         - introduction of a Critic module to encourage best practices.
         - transfer case checks from WAI to Critic.
 
-0.08	03/06/2011
+0.08    2011-06-03
         - updated README.
         - added object check (WCAG v2 1.1.1 (A)).
         - added WAI WCAG v2 references to error hash.
@@ -22,7 +29,7 @@ Revision history for Test-XHTML
         - removed network skip in test (thanks to Sergiy Borodych).
         - added WAI WCAG v2 check for different repeated link titles.
 
-0.07	01/06/2011
+0.07    2011-06-01
         - added checks for submit button outside of a form.
         - fixed change files test file (thanks to Sergiy Borodych)
         - fixed help call in the xhtml-valid script (thanks to Sergiy Borodych)
@@ -30,7 +37,7 @@ Revision history for Test-XHTML
           xhtml-valid script.
         - ignore blank URLs (thanks to Sergiy Borodych)
 
-0.06	27/05/2011
+0.06    2011-05-27
         - revised several WAI tests.
         - added ability to select a form for input/submit commands.
         - WWW::Mechanize object can now be passed to Test::XHTML::Valid.
@@ -44,7 +51,7 @@ Revision history for Test-XHTML
         - added checks for case to all known HTML tags, based on DTD.
         - added checks for formatting recommendations (eg i & b tags).
 
-0.05	04/05/2011
+0.05    2011-05-04
         - added support for hidden, textarea and select form controls.
         - added support for validating XML strings (suggested by Colin Newell).
         - added support for XML catalogs (suggested by Nick Morrott).
@@ -52,19 +59,19 @@ Revision history for Test-XHTML
         - added error output to xhtml-valid script.
         - refactored and simplified logic when parsing a page.
 
-0.04	26/04/2011
+0.04    2011-04-26
         - added WAI.pm to add basic level support for WAI compliance.
 
-0.03	13/01/2011
+0.03    2011-01-13
         - added ability to provide negative matches.
         - provide file content when errors occur.
         - added errstr to return error message string.
 
-0.02	13/05/2010
+0.02    2010-05-13
         - script turned into proper Perl Test package suite.
         - added basic test suite.
         - added retrieve_file functionality
         - added support for 'file' type in test csv files.
 
-0.01	08/10/2008
-	    - initial version (xhtml-valid)
+0.01    2008-10-08
+        - initial version (xhtml-valid)

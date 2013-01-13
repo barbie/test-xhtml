@@ -1,7 +1,7 @@
-use Test::More;
-use Test::XHTML;
+#!/usr/bin/perl -w
+use strict;
 
-my $version = $Test::XHTML::VERSION;
+use Test::More;
 
 # Skip if doing a regular install
 plan skip_all => "Author tests not required for installation"
@@ -10,10 +10,12 @@ plan skip_all => "Author tests not required for installation"
 eval "use Test::CPAN::Meta::JSON";
 plan skip_all => "Test::CPAN::Meta::JSON required for testing META.json files" if $@;
 
-plan no_plan;
+plan 'no_plan';
 
 my $meta = meta_spec_ok(undef,undef,@_);
 
+use Test::XHTML;
+my $version = $Test::XHTML::VERSION;
 
 is($meta->{version},$version,
     'META.json distribution version matches');

@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use vars qw($VERSION);
-$VERSION = '0.09';
+$VERSION = '0.10';
 
 #----------------------------------------------------------------------------
 
@@ -48,10 +48,7 @@ use Data::Dumper;
 
 my @RESULTS = qw( PASS FAIL );
 
-# until Gisle updates HTML::TokeParser with the patch [1], and I can require
-# a minimum version of it, this will have to suffice.
-# [1] https://gitorious.org/perl-html-parser/mainline/merge_requests/2
-my $FIXED = $HTML::TokeParser::VERSION > 3.57 ? 1 : 0;
+my $FIXED = $HTML::TokeParser::VERSION >= 3.69 ? 1 : 0;
 
 # For a full list of valid W3C DTD types, please see 
 # http://www.w3.org/QA/2002/04/valid-dtd-list.html
@@ -589,7 +586,7 @@ There are no known bugs at the time of this release. However, if you spot a
 bug or are experiencing difficulties, that is not explained within the POD
 documentation, please send bug reports and patches to barbie@cpan.org.
 
-Fixes are dependant upon their severity and my availablity. Should a fix not
+Fixes are dependent upon their severity and my availability. Should a fix not
 be forthcoming, please feel free to (politely) remind me.
 
 =head1 SEE ALSO
