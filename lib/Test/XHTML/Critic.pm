@@ -504,7 +504,6 @@ sub _check_title {
         };
     }
 
-use Data::Dumper;
     if($x =~ /['"(){}\[\]]/) {
         push @{ $self->{ERRORS} }, {
             #ref     => 'Best Practices Recommedation only',
