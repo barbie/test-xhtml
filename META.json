@@ -71,7 +71,12 @@
     },
 
     "resources": {
-        "license": "http://dev.perl.org/licenses/",
-        "bugtracker": { "web": "http://rt.cpan.org/Public/Dist/Display.html?Name=Test-XHTML" }
+        "license": "http://www.perlfoundation.org/artistic_license_2_0",
+        "bugtracker": { "web": "http://rt.cpan.org/Public/Dist/Display.html?Name=Test-XHTML" },
+        "repository": {
+            "url": "git://github.com/barbie/test-xhtml.git",
+            "web": "http://github.com/barbie/test-xhtml",
+            "type": "git"
+        }
     }
 }
