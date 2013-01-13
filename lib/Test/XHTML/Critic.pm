@@ -181,7 +181,7 @@ my @TAGS = (
     'object', 'ol', 'optgroup', 'option',
     'p', 'param', 'pre',
     'q',
-    's', 'samp', 'script', 'select', 'small', 'span', 'strike', 'strong', 'style', 'sub',
+    's', 'samp', 'script', 'select', 'small', 'span', 'strike', 'strong', 'style', 'summary', 'sub',
     'table', 'tbody', 'td', 'textarea', 'tfoot', 'th', 'thead', 'title', 'tr', 'tt',
     'u', 'ul',
     'var',
@@ -239,7 +239,7 @@ sub _print_errors {
     for my $error (@{$self->{ERRORS}}) {
         $str .= "$i. $error->{error}: $error->{message}";
         $str .= " [$error->{ref}]"                              if($error->{ref});
-        $str .= " [row $error->{row}, column $error->{col}]"    if($error->{row} && $error->{col} && $FIXED);
+        $str .= " [row $error->{row}, column $error->{col}]"    if($FIXED && ($error->{row} || $error->{col}));
         $str .= "\n";
         $i++;
     }
@@ -371,14 +371,14 @@ sub _check_deprecated {
         $elem ||= $deprecated{$tag->[0]}{$dtdtype}{tag};
         push @css, @{ $deprecated{$tag->[0]}{$dtdtype}{css} } if($deprecated{$tag->[0]}{$dtdtype}{css});
 
-        next    unless($self->{dtdtype} >= $dtdtype);
+        next    unless($self->{dtdtype} > $dtdtype);
         next    unless($deprecated{$tag->[0]}{$dtdtype}{attr});
 
         for my $attr (@{ $deprecated{$tag->[0]}{$dtdtype}{attr} }) {
             if($tag->[1]{$attr}) {
                 push @{ $self->{ERRORS} }, {
                     #ref     => 'Best Practices Recommedation only',
-                    error   => "C009",
+                    error   => "C010",
                     message => "'$attr' attribute deprecated in <$tag->[0]> tag",
                     row     => $tag->[4],
                     col     => $tag->[5]
@@ -390,7 +390,7 @@ sub _check_deprecated {
     if($elem && $elem != $tag->[0]) {
         push @{ $self->{ERRORS} }, {
             #ref     => 'Best Practices Recommedation only',
-            error   => "C010",
+            error   => "C011",
             message => "<$tag->[0]> has been deprecated in favour of <$elem>",
             row     => $tag->[4],
             col     => $tag->[5]
@@ -398,7 +398,7 @@ sub _check_deprecated {
     } elsif(@css) {
         push @{ $self->{ERRORS} }, {
             #ref     => 'Best Practices Recommedation only',
-            error   => "C011",
+            error   => "C012",
             message => "<$tag->[0]> has been deprecated in favour of CSS elements (".join(',',@css).")",
             row     => $tag->[4],
             col     => $tag->[5]
@@ -427,7 +427,7 @@ sub _check_size {
         push @{ $self->{ERRORS} }, {
             #ref     => 'Best Practices Recommedation only',
             error   => "C004",
-            message => "width and height attributes allow for pre-rendering <$tag->[0]> tags",
+            message => "width and height attributes allow for pre-rendering <$tag->[0]> tags ($tag->[1]{src})",
             row     => $tag->[4],
             col     => $tag->[5]
         };
@@ -441,7 +441,7 @@ sub _check_language {
         push @{ $self->{ERRORS} }, {
             #ref     => 'Best Practices Recommedation only',
             error   => "C005",
-            message => "langauge attribute deprecated in <$tag->[0]> tag",
+            message => "language attribute deprecated in <$tag->[0]> tag",
             row     => $tag->[4],
             col     => $tag->[5]
         };
@@ -495,7 +495,7 @@ sub _check_title {
         push @{ $self->{ERRORS} }, {
             #ref     => 'Best Practices Recommedation only',
             error   => "C008",
-            message => "W3C recommend <title> should not be longer than 64 characters",
+            message => "W3C recommend <title> should not be longer than 64 characters [".(substr($x,0,64))."]",
             row     => $tag->[4],
             col     => $tag->[5]
         };

@@ -15,6 +15,8 @@ Revision history for Test-XHTML
         - updated documentation.
         - added check for unrecommended characters in title into Critic.
         - latest version of HTML::TokeParser (3.69) includes patch for row/col.
+        - realigned deprecated checks
+        - provided more info for image checks.
 
 0.09    2011-06-07
         - restructured errors:

@@ -286,14 +286,18 @@ sub _check_form_control {
                 col     => $tag->[5]
             };
         } else {
-            $self->{input}{ $tag->[1]{id} }{type}   = $tag->[1]{type};
+            $self->{input}{ $tag->[1]{id} }{type}   = ($tag->[0] =~ /select|textarea/ ? $tag->[0] : $tag->[1]{type});
             $self->{input}{ $tag->[1]{id} }{title}  = $tag->[1]{title};
             $self->{input}{ $tag->[1]{id} }{row}    = $tag->[4];
             $self->{input}{ $tag->[1]{id} }{column} = $tag->[5];
+            $self->{input}{ $tag->[1]{id} }{active} = ($tag->[1]{disabled} || $tag->[1]{readonly} ? 0 : 1);
         }
 
     } elsif($tag->[1]{type} && $tag->[1]{type} =~ /hidden|submit|reset|button/) {
         return;
+
+    #} elsif($tag->[1]{disabled} || $tag->[1]{readonly}) {
+    #    return;
 
     } elsif(!$tag->[1]{title}) {
         push @{ $self->{ERRORS} }, {
@@ -520,6 +524,7 @@ sub _check_labelling {
         next    if($self->{input}{$input}{type} && $self->{input}{$input}{type} =~ /hidden|submit|reset|button/);
         next    if($self->{label}{$input});
         next    if($self->{input}{$input}{title});
+        #next    if($self->{input}{$input}{active} == 0);
 
         push @{ $self->{ERRORS} }, {
             ref     => 'WCAG v2 1.1.1 (A)', #E866
