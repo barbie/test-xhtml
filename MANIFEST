@@ -11,6 +11,7 @@ lib/Test/XHTML.pm
 lib/Test/XHTML/Critic.pm
 lib/Test/XHTML/Valid.pm
 lib/Test/XHTML/WAI.pm
+LICENSE
 t/01use.t
 t/10filetests.t
 t/11filetests.t
