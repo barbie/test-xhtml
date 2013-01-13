@@ -1,5 +1,6 @@
 Revision history for Test-XHTML
 
+0.11    2013-01-13
         - change file dates changed to meet W3CDTF standards.
         - updated test suite.
         - updated META files.

@@ -3,7 +3,7 @@ use strict;
 use warnings;
 $|++;
 
-my $VERSION = '0.07';
+my $VERSION = '0.11';
 
 #----------------------------------------------------------------------------
 
@@ -260,7 +260,7 @@ There are no known bugs at the time of this release. However, if you spot a
 bug or are experiencing difficulties, that is not explained within the POD
 documentation, please send bug reports and patches to barbie@cpan.org.
 
-Fixes are dependant upon their severity and my availablity. Should a fix not
+Fixes are dependent upon their severity and my availability. Should a fix not
 be forthcoming, please feel free to (politely) remind me.
 
 =head1 SEE ALSO
@@ -274,9 +274,9 @@ L<XML::LibXML>
 
 =head1 COPYRIGHT AND LICENSE
 
-  Copyright (C) 2008-2011 Barbie for Miss Barbell Productions.
+  Copyright (C) 2008-2013 by Barbie <barbie@missbarbell.co.uk>
 
-  This module is free software; you can redistribute it and/or
+  This distribution is free software; you can redistribute it and/or
   modify it under the Artistic Licence v2.
 
 =cut
