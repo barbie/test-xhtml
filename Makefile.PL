@@ -8,7 +8,7 @@ use ExtUtils::MakeMaker;
 
 WriteMakefile(
     AUTHOR              => 'Barbie <barbie@cpan.org>',
-    NAME                => 'Test-XHTML',
+    NAME                => 'Test::XHTML',
     VERSION_FROM	    => 'lib/Test/XHTML.pm',
     ABSTRACT            => 'Test web page code validation',
     NO_META             => 1,
