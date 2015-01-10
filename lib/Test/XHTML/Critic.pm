@@ -387,11 +387,11 @@ sub _check_deprecated {
         }
     }
 
-    if($elem && $elem != $tag->[0]) {
+    if($elem && $elem->[0] ne $tag->[0]) {
         push @{ $self->{ERRORS} }, {
             #ref     => 'Best Practices Recommedation only',
             error   => "C011",
-            message => "<$tag->[0]> has been deprecated in favour of <$elem>",
+            message => "<$tag->[0]> has been deprecated in favour of <$elem->[0]>",
             row     => $tag->[4],
             col     => $tag->[5]
         };

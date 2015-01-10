@@ -1,4 +1,7 @@
 Revision history for Test-XHTML
+===============================
+
+        - fixed license fields in META.json to be lists.
 
 0.12    2013-01-13
         - merged changes from other repos.

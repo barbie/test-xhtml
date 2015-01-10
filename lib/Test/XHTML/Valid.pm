@@ -72,7 +72,7 @@ my @IGNORE = (
     qr/\.(xml|txt|pdf|doc|odt|odp|ods)$/i,
     qr/\.(tgz|gz|bz2|rar|zip)$/i,
     qr/\.(mp4|avi|wmv)$/i,
-    qr/\.(jpg|bmp|gif|png)$/i,
+    qr/\.(jpg|jpeg|bmp|gif|png|tiff?)$/i,
 );
 
 my @RESULTS = qw( PAGES PASS FAIL NET );
