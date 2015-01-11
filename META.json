@@ -1,6 +1,6 @@
 {
     "name": "Test-XHTML",
-    "version": "0.12",
+    "version": "0.13",
     "abstract": "Test web page code validation.",
     "author": ["Barbie <barbie@cpan.org>"],
 
@@ -55,15 +55,19 @@
     "provides": {
         "Test::XHTML": {
             "file": "lib/Test/XHTML.pm",
-            "version": "0.12"
+            "version": "0.13"
+        },
+        "Test::XHTML::Critic": {
+            "file": "lib/Test/XHTML/Critic.pm",
+            "version": "0.13"
         },
         "Test::XHTML::Valid": {
             "file": "lib/Test/XHTML/Valid.pm",
-            "version": "0.12"
+            "version": "0.13"
         },
         "Test::XHTML::WAI": {
             "file": "lib/Test/XHTML/WAI.pm",
-            "version": "0.12"
+            "version": "0.13"
         }
     },
     "no_index": {
