@@ -300,10 +300,12 @@ sub _check_form_control {
     #    return;
 
     } elsif(!$tag->[1]{title}) {
+        # Attempt to identify by name, ID, full tag dump, then fallback to 'unknown' if they all are falsey.
+        my $identifier = $tag->[1]{name} || $tag->[1]{id} || $tag->[3] || "Unknown Element";
         push @{ $self->{ERRORS} }, {
             ref     => 'WCAG v2 1.1.1 (A)', #E866
             error   => "W003",
-            message => "all <$tag->[0]> tags require a <label> or a title attribute ($tag->[1]{name})",
+            message => "all <$tag->[0]> tags require a <label> or a title attribute ($identifier)",
             row     => $tag->[4],
             col     => $tag->[5]
         };
@@ -526,10 +528,11 @@ sub _check_labelling {
         next    if($self->{input}{$input}{title});
         #next    if($self->{input}{$input}{active} == 0);
 
+        my $type = $self->{input}{$input}{type} || 'input';
         push @{ $self->{ERRORS} }, {
             ref     => 'WCAG v2 1.1.1 (A)', #E866
             error   => "W014",
-            message => "all <$self->{input}{$input}{type}> tags require a unique <label> tag or a title attribute ($input)",
+            message => "all <$type> tags require a unique <label> tag or a title attribute ($input)",
             row     => $self->{input}{$input}{row},
             col     => $self->{input}{$input}{column}
         };

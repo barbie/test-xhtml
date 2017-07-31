@@ -32,6 +32,9 @@ SKIP: {
 }
 
 # crude, but it'll hopefully do ;)
+# XXX Will fail if user doesn't have direct access to interface (ICMP ping requires this),
+# so most people will see a SKIP from this for *that* reason.
+# Another problem -- it seems that as of 2017, the site explicitly drops ICMP (probably as DDOS prevention).
 sub pingtest {
   system("ping -q -c 1 www.w3c.org >/dev/null 2>&1");
   my $retcode = $? >> 8;
