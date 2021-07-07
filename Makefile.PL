@@ -33,6 +33,7 @@ WriteMakefile(
         # used in testing
         'Test::Builder::Tester' => '0',
         'Test::More'            => '0.70',
+        'Test::NoWarnings'      => '1.04',
 
     },
 
