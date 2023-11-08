@@ -80,7 +80,7 @@ my @RESULTS = qw( PAGES PASS FAIL NET );
 # -------------------------------------
 # Singletons
 
-my $parser = XML::LibXML->new;
+my $parser = XML::LibXML->new(load_ext_dtd => 1);
 $parser->validation(1);
 
 # -------------------------------------
